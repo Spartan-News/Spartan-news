@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-sparta-blue: #0033A0;
+  --color-sparta-darkblue: #001E62;
+  --color-sparta-gold: #FFC72C;
+  --color-sparta-accent: #1D4ED8;
+}
+
+/* Light Mode Defaults */
+body {
+  @apply bg-slate-100 text-slate-900 font-sans antialiased transition-colors duration-200;
+}
+
+/* Dark Mode Body Background & Text */
+.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
