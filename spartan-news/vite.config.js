@@ -1,7 +1,17 @@
-import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import Sitemap from 'vite-plugin-sitemap'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    Sitemap({
+      hostname: 'https://spartan-news.lsg1.workers.dev', // Replace with your custom domain or Cloudflare Pages URL
+      dynamicRoutes: [
+        '/',
+        '/live',
+        '/pastlives'
+      ]
+    })
+  ]
 })

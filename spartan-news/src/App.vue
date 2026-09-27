@@ -77,11 +77,15 @@ onMounted(() => {
       <router-view />
     </main>
 
-    <footer class="border-t border-slate-300 dark:border-slate-800 mt-20 py-8 bg-slate-200 dark:bg-slate-950 text-slate-600 dark:text-slate-400">
-      <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
-        <p class="text-xs font-semibold">Sparta Senior High School • Live Streaming & Broadcast Club</p>
-        <p class="text-[11px] text-slate-500">Built for Spartan News Network • Sparta, Michigan</p>
-      </div>
-    </footer>
+<footer class="border-t border-slate-300 dark:border-slate-800 mt-20 py-8 bg-slate-200 dark:bg-slate-950 text-slate-600 dark:text-slate-400">
+  <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+    <p class="text-xs font-semibold">Sparta Senior High School • Live Streaming & Broadcast Club</p>
+    <div class="flex justify-center items-center gap-4 text-[11px] text-slate-500">
+      <span>Built for Spartan News Network • Sparta, Michigan</span>
+      <span>•</span>
+      <a href="/sitemap.xml" target="_blank" class="hover:underline text-blue-600 dark:text-blue-400">Sitemap</a>
+    </div>
+  </div>
+</footer>
   </div>
 </template>
