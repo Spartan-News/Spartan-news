@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Spartan News Live</string>
+    <string name="title_activity_main">Spartan News Live</string>
+    <string name="package_name">com.spartanhigh.news</string>
+    <string name="custom_url_scheme">com.spartanhigh.news</string>
+</resources>
