@@ -7,7 +7,8 @@ export default defineConfig({
     vue(),
     Sitemap({
       hostname: 'https://spartan-news.pages.dev',
-      generateRobotsTxt: true,
+      generateRobotsTxt: false,
+      robots: false,
       dynamicRoutes: [
         '/',
         '/scoreboard',
