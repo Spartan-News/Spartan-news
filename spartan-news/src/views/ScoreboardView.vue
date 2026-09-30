@@ -1,9 +1,9 @@
 <script setup>
-import LiveScoreboard from '../components/LiveScoreboard.vue';
+import LiveScoreboard from '../components/LiveScoreBoard.vue';
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto space-y-6 py-4">
+  <div class="max-w-3xl mx-auto space-y-6">
     <div class="text-center space-y-1">
       <h2 class="text-2xl font-black text-white tracking-tight">
         Spartan Athletics Live Scoreboard
