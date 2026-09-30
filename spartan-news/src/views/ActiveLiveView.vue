@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Tv, Radio, Calendar, RefreshCw } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Tv, Radio, Calendar, RefreshCw, Trophy, Activity } from 'lucide-vue-next';
 import { checkLiveStatus, fetchUpcomingStreams } from '../services/youtube.js';
+import { startGameLiveActivity } from '../services/notifications.js';
 
 const isLive = ref(false);
 const currentLiveVideoId = ref('');
@@ -9,10 +10,51 @@ const liveStreamTitle = ref('');
 const upcomingStreams = ref([]);
 const loading = ref(true);
 
+// Hudl Live Score State
+const hudlScore = ref({
+  isLive: false,
+  sport: 'Spartan Athletics',
+  homeTeam: 'Spartans',
+  awayTeam: 'Opponent',
+  homeScore: 0,
+  awayScore: 0,
+  gameClock: 'SCHEDULED'
+});
+
+const isSubscribedToLiveActivity = ref(false);
+let hudlTimer = null;
+
+// Fetch Live Scores from Cloudflare Worker Hudl Endpoint
+const fetchHudlScore = async () => {
+  try {
+    const res = await fetch("https://spartan-youtube-notifier.lsg1.workers.dev/check-scores");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.isLive) {
+        hudlScore.value = data;
+      } else {
+        hudlScore.value.isLive = false;
+      }
+    }
+  } catch (err) {
+    console.error("Hudl score fetch failed:", err);
+  }
+};
+
+const pinScoreToLockScreen = async () => {
+  isSubscribedToLiveActivity.value = true;
+  await startGameLiveActivity(
+    "sparta_game_score",
+    hudlScore.value.homeScore,
+    hudlScore.value.awayScore,
+    hudlScore.value.gameClock
+  );
+};
+
 const checkLiveAndSchedule = async () => {
   loading.value = true;
   
-  // 1. Check if a stream is currently live
+  // 1. Check YouTube Live Status
   const liveInfo = await checkLiveStatus('SpartanNewsLive');
   if (liveInfo && liveInfo.isLive) {
     isLive.value = true;
@@ -24,15 +66,24 @@ const checkLiveAndSchedule = async () => {
     liveStreamTitle.value = '';
   }
 
-  // 2. Fetch upcoming scheduled streams from YouTube
+  // 2. Fetch Upcoming Scheduled Streams
   const scheduled = await fetchUpcomingStreams('SpartanNewsLive');
   upcomingStreams.value = scheduled;
+
+  // 3. Fetch Live Hudl Game Scores
+  await fetchHudlScore();
 
   loading.value = false;
 };
 
 onMounted(() => {
   checkLiveAndSchedule();
+  // Poll for Hudl live game score updates every 30 seconds
+  hudlTimer = setInterval(fetchHudlScore, 30000);
+});
+
+onUnmounted(() => {
+  if (hudlTimer) clearInterval(hudlTimer);
 });
 </script>
 
@@ -49,6 +100,43 @@ onMounted(() => {
         <RefreshCw class="w-4 h-4 text-slate-300" :class="{ 'animate-spin': loading }" />
       </button>
     </div>
+
+    <!-- Real-time Hudl Live Score Banner -->
+    <section v-if="hudlScore.isLive" class="bg-slate-900 border border-blue-600/40 rounded-2xl p-5 text-white shadow-2xl max-w-2xl mx-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+        <div class="flex items-center gap-2">
+          <Trophy class="w-5 h-5 text-amber-400" />
+          <span class="font-black text-xs uppercase tracking-wider text-blue-400">{{ hudlScore.sport }}</span>
+        </div>
+        <span class="bg-red-600/20 text-red-400 text-xs font-black px-2.5 py-1 rounded-full animate-pulse flex items-center gap-1">
+          <Activity class="w-3.5 h-3.5" /> LIVE HUDL SCORE
+        </span>
+      </div>
+
+      <div class="grid grid-cols-3 items-center text-center my-4">
+        <div>
+          <p class="text-xs text-slate-400 font-bold uppercase">{{ hudlScore.homeTeam }}</p>
+          <p class="text-4xl font-extrabold text-blue-400 mt-1">{{ hudlScore.homeScore }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-mono bg-slate-800 py-1 px-2.5 rounded text-slate-300 inline-block border border-slate-700">
+            {{ hudlScore.gameClock }}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold uppercase">{{ hudlScore.awayTeam }}</p>
+          <p class="text-4xl font-extrabold text-slate-200 mt-1">{{ hudlScore.awayScore }}</p>
+        </div>
+      </div>
+
+      <button 
+        @click="pinScoreToLockScreen"
+        class="w-full py-2.5 px-4 rounded-xl font-bold text-xs tracking-wider uppercase transition flex justify-center items-center gap-2"
+        :class="isSubscribedToLiveActivity ? 'bg-emerald-600 text-white' : 'bg-sparta-blue hover:bg-blue-700 text-white'"
+      >
+        {{ isSubscribedToLiveActivity ? '✓ Score Updates Pinned to Lock Screen' : 'Pin Live Score to Lock Screen' }}
+      </button>
+    </section>
 
     <!-- Active Broadcast Player -->
     <section class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
