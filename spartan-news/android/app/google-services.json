@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "269168407567",
+    "project_id": "shsnew-d7927",
+    "storage_bucket": "shsnew-d7927.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:269168407567:android:ecf87359158718274bdf7a",
+        "android_client_info": {
+          "package_name": "com.spartanhigh.news"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKrQCKMjGynPB7gDnRbvU6KOy-5pgKSkw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

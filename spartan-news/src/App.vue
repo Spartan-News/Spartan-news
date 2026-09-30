@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { Radio, Tv, History, Sun, Moon } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
+import { initNotifications } from './services/notifications.js';
 
 const { isDark, initTheme, toggleTheme } = useTheme();
 
