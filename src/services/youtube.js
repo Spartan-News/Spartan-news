@@ -1,152 +1,28 @@
-const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+const WORKER_URL = 'https://spartan-youtube-notifier.lsg1.workers.dev';
 
-const CHANNELS = {
-  daily: 'spartannewsdaily8847',
-  live: 'SpartanNewsLive'
-};
-
-const channelIdCache = {};
-
-function ensureHandlePrefix(handle) {
-  if (!handle) return '';
-  return handle.startsWith('@') ? handle : `@${handle}`;
-}
-
-async function getChannelId(handle) {
-  const formattedHandle = ensureHandlePrefix(handle);
-
-  if (channelIdCache[formattedHandle]) {
-    return channelIdCache[formattedHandle];
-  }
-
+export async function fetchLatestVideos(handle = 'spartannewsdaily8847') {
   try {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(formattedHandle)}&key=${API_KEY}`
-    );
+    const res = await fetch(`${WORKER_URL}/youtube-feed?handle=${encodeURIComponent(handle)}`);
+    if (!res.ok) return [];
+    
     const data = await res.json();
-
-    if (data.items && data.items.length > 0) {
-      const channelId = data.items[0].id;
-      channelIdCache[formattedHandle] = channelId;
-      return channelId;
-    }
-    return null;
-  } catch (err) {
-    console.error('Error resolving channel ID:', err);
-    return null;
-  }
-}
-
-function decodeHtmlEntities(str) {
-  if (!str) return '';
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(str, 'text/html');
-  return doc.body.textContent || str;
-}
-
-export async function fetchLatestVideos(handle = CHANNELS.daily, maxResults = 12) {
-  try {
-    const channelId = await getChannelId(handle);
-    if (!channelId) return getFallbackNews();
-
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=${maxResults}&type=video&key=${API_KEY}`;
-
-    const videosRes = await fetch(url);
-    const videosData = await videosRes.json();
-
-    if (!videosData.items || videosData.items.length === 0) return getFallbackNews();
-
-    return videosData.items.map(item => ({
-      id: item.id.videoId,
-      title: decodeHtmlEntities(item.snippet.title),
-      description: item.snippet.description,
-      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-      publishedAtRaw: item.snippet.publishedAt,
-      publishedAt: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      }),
-      channelTitle: item.snippet.channelTitle
-    }));
+    return data.items || [];
   } catch (error) {
-    console.error('Error fetching YouTube videos:', error);
-    return getFallbackNews();
-  }
-}
-
-export async function checkLiveStatus(handle = CHANNELS.live) {
-  try {
-    const channelId = await getChannelId(handle);
-    if (!channelId) return { isLive: false, videoId: null, title: 'Channel not found' };
-
-    const liveRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${API_KEY}`
-    );
-    const liveData = await liveRes.json();
-
-    if (liveData.items && liveData.items.length > 0) {
-      return {
-        isLive: true,
-        videoId: liveData.items[0].id.videoId,
-        title: decodeHtmlEntities(liveData.items[0].snippet.title),
-        thumbnail: liveData.items[0].snippet.thumbnails.high?.url
-      };
-    }
-    return { isLive: false, videoId: null, title: 'No stream currently active' };
-  } catch (error) {
-    console.error('Error checking live stream status:', error);
-    return { isLive: false, videoId: null };
-  }
-}
-
-export async function fetchUpcomingStreams(handle = CHANNELS.live) {
-  try {
-    const channelId = await getChannelId(handle);
-    if (!channelId) return [];
-
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=upcoming&type=video&order=date&key=${API_KEY}`
-    );
-    const data = await res.json();
-
-    if (!data.items || data.items.length === 0) return [];
-
-    return data.items.map(item => ({
-      id: item.id.videoId,
-      title: decodeHtmlEntities(item.snippet.title),
-      scheduledTime: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      })
-    }));
-  } catch (error) {
-    console.error('Error fetching upcoming streams:', error);
+    console.error('Error fetching YouTube feed from worker:', error);
     return [];
   }
 }
 
-function getFallbackNews() {
-  const now = new Date();
-  return [
-    {
-      id: 'dQw4w9WgXcQ',
-      title: 'Spartan News Daily Broadcast & Announcements',
-      description: 'Daily news coverage and announcements for Sparta Senior High School students and staff.',
-      publishedAt: 'Today',
-      publishedAtRaw: now.toISOString(),
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
-    },
-    {
-      id: '3JZ_D3ELwOQ',
-      title: 'Spartan Athletics & Club Activities Weekly Update',
-      description: 'Highlights and upcoming schedules for Sparta High School sports and broadcast club activities.',
-      publishedAt: 'Yesterday',
-      publishedAtRaw: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-      thumbnail: 'https://i.ytimg.com/vi/3JZ_D3ELwOQ/hqdefault.jpg'
-    }
-  ];
+export async function checkLiveStatus(handle = 'SpartanNewsLive') {
+  try {
+    const res = await fetch(`${WORKER_URL}/check-live?handle=${encodeURIComponent(handle)}`);
+    if (!res.ok) return { isLive: false, videoId: null };
+    return await res.json();
+  } catch (error) {
+    return { isLive: false, videoId: null };
+  }
+}
+
+export async function fetchUpcomingStreams(handle = 'SpartanNewsLive') {
+  return [];
 }

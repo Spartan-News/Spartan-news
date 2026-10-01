@@ -1,191 +1,170 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { Play, Search, Filter, RefreshCw, Tv, X } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
 import { fetchLatestVideos } from '../services/youtube.js';
+import { Tv, Search, RotateCcw, Calendar, Play, AlertCircle } from 'lucide-vue-next';
 
-const timeFilter = ref('month');
-const searchQuery = ref('');
+const streams = ref([]);
 const loading = ref(true);
-const displayLimit = ref(12);
-const videos = ref([]);
-const activePlayingId = ref(null); // Tracks currently playing replay ID
+const apiError = ref(false);
+const searchQuery = ref('');
+const timeFilter = ref('month');
 
-const getPublishedAfterDate = (filter) => {
-  const now = new Date();
-  if (filter === 'week') {
-    now.setDate(now.getDate() - 7);
-    return now.toISOString();
-  }
-  if (filter === 'month') {
-    now.setMonth(now.getMonth() - 1);
-    return now.toISOString();
-  }
-  return null;
-};
-
-const loadPastLives = async () => {
+const loadPastStreams = async () => {
   loading.value = true;
-  const publishedAfter = getPublishedAfterDate(timeFilter.value);
-  const data = await fetchLatestVideos('SpartanNewsLive', 30, publishedAfter);
-  videos.value = data;
-  loading.value = false;
+  apiError.value = false;
+  try {
+    // Fetch completed broadcasts and video archives for SpartanNewsLive
+    const fetched = await fetchLatestVideos('SpartanNewsLive', 24);
+    if (fetched && fetched.length > 0) {
+      streams.value = fetched;
+    } else {
+      streams.value = [];
+      apiError.value = true;
+    }
+  } catch (err) {
+    console.error('Failed to load past live stream replays:', err);
+    streams.value = [];
+    apiError.value = true;
+  } finally {
+    loading.value = false;
+  }
 };
+
+const filteredStreams = computed(() => {
+  const now = new Date();
+
+  return streams.value.filter(stream => {
+    const matchesSearch = stream.title.toLowerCase().includes(searchQuery.value.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (timeFilter.value === 'all') return true;
+
+    const publishedDate = new Date(stream.publishedAtRaw || Date.now());
+    const diffDays = Math.ceil(Math.abs(now - publishedDate) / (1000 * 60 * 60 * 24));
+
+    if (timeFilter.value === 'week') return diffDays <= 7;
+    if (timeFilter.value === 'month') return diffDays <= 30;
+
+    return true;
+  });
+});
 
 onMounted(() => {
-  loadPastLives();
+  loadPastStreams();
 });
-
-watch(timeFilter, () => {
-  displayLimit.value = 12;
-  loadPastLives();
-});
-
-const filteredVideos = computed(() => {
-  let list = [...videos.value];
-  if (searchQuery.value.trim()) {
-    list = list.filter(v => v.title.toLowerCase().includes(searchQuery.value.toLowerCase()));
-  }
-  return list;
-});
-
-const visibleVideos = computed(() => {
-  return filteredVideos.value.slice(0, displayLimit.value);
-});
-
-const playVideo = (id) => {
-  activePlayingId.value = id;
-};
-
-const stopVideo = () => {
-  activePlayingId.value = null;
-};
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header & Controls -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
       <div>
-        <h2 class="text-2xl font-bold text-white tracking-tight">Past Live Streams & Replays</h2>
-        <p class="text-sm text-slate-400">Stream recordings and sports replays from @SpartanNewsLive</p>
+        <h2 class="text-2xl font-black text-white tracking-tight">
+          Past Live Streams & Replays
+        </h2>
+        <p class="text-xs text-slate-400">
+          Stream recordings and sports replays from @SpartanNewsLive
+        </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="bg-slate-900 border border-slate-800 p-1 rounded-lg flex items-center gap-1">
-          <Filter class="w-3.5 h-3.5 text-slate-500 ml-2 mr-1" />
+      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <!-- Time Filter Buttons -->
+        <div class="flex bg-slate-900 border border-slate-800 p-1 rounded-lg text-xs font-bold">
           <button 
-            @click="timeFilter = 'week'"
-            :class="timeFilter === 'week' ? 'bg-slate-800 text-sparta-gold font-bold' : 'text-slate-400 hover:text-white'"
-            class="px-2.5 py-1 text-xs rounded-md transition"
+            @click="timeFilter = 'week'" 
+            class="px-3 py-1.5 rounded transition"
+            :class="timeFilter === 'week' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
           >
             Past Week
           </button>
           <button 
-            @click="timeFilter = 'month'"
-            :class="timeFilter === 'month' ? 'bg-slate-800 text-sparta-gold font-bold' : 'text-slate-400 hover:text-white'"
-            class="px-2.5 py-1 text-xs rounded-md transition"
+            @click="timeFilter = 'month'" 
+            class="px-3 py-1.5 rounded transition"
+            :class="timeFilter === 'month' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
           >
             Past Month
           </button>
           <button 
-            @click="timeFilter = 'all'"
-            :class="timeFilter === 'all' ? 'bg-slate-800 text-sparta-gold font-bold' : 'text-slate-400 hover:text-white'"
-            class="px-2.5 py-1 text-xs rounded-md transition"
+            @click="timeFilter = 'all'" 
+            class="px-3 py-1.5 rounded transition"
+            :class="timeFilter === 'all' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
           >
             All Time
           </button>
         </div>
 
-        <div class="relative">
-          <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+        <!-- Search Input -->
+        <div class="relative flex-1 md:w-56">
+          <Search class="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
           <input 
-            v-model="searchQuery"
+            v-model="searchQuery" 
             type="text" 
             placeholder="Search stream replays..." 
-            class="bg-slate-900 border border-slate-800 pl-9 pr-4 py-1.5 text-xs rounded-lg focus:outline-none focus:border-sparta-gold text-slate-200 w-44"
+            class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
           />
         </div>
 
-        <button @click="loadPastLives" class="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded-lg transition">
-          <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
+        <!-- Refresh Button -->
+        <button 
+          @click="loadPastStreams" 
+          class="p-2 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition"
+          title="Refresh Feed"
+        >
+          <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
         </button>
       </div>
     </div>
 
-    <!-- Video Grid with In-Page Embedded Playback -->
-    <div v-if="visibleVideos.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div 
-        v-for="video in visibleVideos" 
-        :key="video.id"
-        class="group bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-sparta-gold/50 transition duration-200 flex flex-col justify-between"
-      >
-        <!-- Embedded Replay Player Unit -->
-        <div class="relative aspect-video bg-black overflow-hidden">
-          <iframe 
-            v-if="activePlayingId === video.id"
-            :src="`https://www.youtube.com/embed/${video.id}?autoplay=1`"
-            class="w-full h-full"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+    <!-- Skeleton Loading Grid -->
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-for="i in 6" :key="i" class="aspect-video bg-slate-900 animate-pulse rounded-xl border border-slate-800"></div>
+    </div>
 
-          <div v-else @click="playVideo(video.id)" class="w-full h-full cursor-pointer relative">
-            <img :src="video.thumbnail" :alt="video.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-            <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex items-center justify-center">
-              <div class="w-12 h-12 rounded-full bg-sparta-green/90 text-sparta-gold flex items-center justify-center shadow-lg group-hover:scale-110 transition">
-                <Play class="w-5 h-5 fill-current ml-0.5" />
-              </div>
+    <!-- Live Stream Replays Grid -->
+    <div v-else-if="filteredStreams.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <router-link
+        v-for="stream in filteredStreams"
+        :key="stream.id"
+        :to="`/live?v=${stream.id}`"
+        class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl overflow-hidden shadow-lg transition group flex flex-col"
+      >
+        <!-- Thumbnail -->
+        <div class="relative aspect-video bg-slate-950 overflow-hidden">
+          <img 
+            :src="stream.thumbnail" 
+            :alt="stream.title" 
+            class="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+          />
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <div class="w-12 h-12 rounded-full bg-sparta-blue text-white flex items-center justify-center shadow-lg">
+              <Play class="w-6 h-6 fill-current ml-0.5" />
             </div>
           </div>
-
-          <!-- Stop / Close Replay Button -->
-          <button 
-            v-if="activePlayingId === video.id"
-            @click="stopVideo"
-            class="absolute top-2 right-2 bg-black/80 hover:bg-red-600 text-white p-1.5 rounded-full transition z-10"
-            title="Close Replay"
-          >
-            <X class="w-4 h-4" />
-          </button>
         </div>
 
-        <div class="p-4 space-y-2 flex-1 flex flex-col justify-between">
-          <div>
-            <span class="text-[10px] font-bold text-sparta-gold uppercase tracking-wider">
-              Spartan News Live Replay
-            </span>
-            <h3 class="text-sm font-bold text-slate-100 line-clamp-2 leading-snug mt-1">
-              {{ video.title }}
-            </h3>
-          </div>
-          <div class="flex justify-between items-center pt-2 border-t border-slate-800/80 mt-2">
-            <p class="text-xs text-slate-500">
-              Streamed {{ video.publishedAt }}
-            </p>
-            <button 
-              v-if="activePlayingId !== video.id"
-              @click="playVideo(video.id)"
-              class="text-xs font-bold text-sparta-gold hover:underline flex items-center gap-1"
-            >
-              Watch Replay
-            </button>
+        <!-- Info -->
+        <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
+          <h3 class="font-bold text-sm text-white line-clamp-2 group-hover:text-blue-400 transition">
+            {{ stream.title }}
+          </h3>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
+            <Calendar class="w-3.5 h-3.5 text-slate-500" />
+            <span>Streamed {{ stream.publishedAt }}</span>
           </div>
         </div>
-      </div>
+      </router-link>
     </div>
 
-    <div v-else-if="!loading" class="text-center py-16 bg-slate-900/50 border border-slate-800 rounded-xl">
-      <Tv class="w-10 h-10 text-slate-600 mx-auto mb-2" />
-      <p class="text-slate-400 font-medium">No live stream recordings found for the selected timeframe.</p>
-    </div>
-
-    <div v-if="filteredVideos.length > displayLimit" class="text-center pt-4">
-      <button 
-        @click="displayLimit += 12"
-        class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-sparta-gold/40 text-xs font-bold rounded-lg transition text-slate-200"
-      >
-        Load More Stream Replays
-      </button>
+    <!-- Empty / Error State -->
+    <div v-else class="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center text-slate-400 max-w-xl mx-auto my-12 space-y-2">
+      <AlertCircle v-if="apiError" class="w-10 h-10 text-amber-500 mx-auto" />
+      <Tv v-else class="w-10 h-10 text-slate-600 mx-auto" />
+      <p class="text-sm font-bold text-slate-200">
+        {{ apiError ? 'Unable to load YouTube stream replays.' : 'No stream recordings found for the selected timeframe.' }}
+      </p>
+      <p class="text-xs text-slate-500">
+        {{ apiError ? 'Ensure VITE_YOUTUBE_API_KEY is configured in your .env.local file or Cloudflare Pages environment variables.' : 'Try switching to All Time or clearing your search query.' }}
+      </p>
     </div>
   </div>
 </template>

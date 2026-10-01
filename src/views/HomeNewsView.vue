@@ -208,9 +208,14 @@ onMounted(() => {
 
     <!-- Empty / API Key Error State -->
     <div v-else class="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center text-slate-400 max-w-xl mx-auto my-12 space-y-2">
-      <AlertCircle class="w-10 h-10 text-amber-500 mx-auto" />
-      <p class="text-sm font-bold text-slate-200">Unable to load YouTube videos right now.</p>
-      <p class="text-xs text-slate-500">Ensure <code class="bg-slate-800 px-1.5 py-0.5 rounded text-blue-400">VITE_YOUTUBE_API_KEY</code> is configured in Cloudflare Pages environment variables.</p>
+      <AlertCircle v-if="apiError" class="w-10 h-10 text-amber-500 mx-auto" />
+      <Tv v-else class="w-10 h-10 text-slate-600 mx-auto" />
+      <p class="text-sm font-bold text-slate-200">
+        {{ apiError ? 'Unable to load YouTube news videos.' : 'No videos found for the selected filter.' }}
+      </p>
+      <p class="text-xs text-slate-500">
+        {{ apiError ? 'Check your VITE_YOUTUBE_API_KEY environment variable in .env.local' : 'Try selecting All Time or clearing your search.' }}
+      </p>
     </div>
   </div>
 </template>
