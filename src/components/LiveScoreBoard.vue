@@ -1,10 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { Trophy, Activity, MapPin, User, ChevronRight } from 'lucide-vue-next';
+import { Trophy, Activity, MapPin, User, Calendar, Clock } from 'lucide-vue-next';
 import { startGameLiveActivity } from '../services/notifications.js';
 
 const games = ref([]);
 const activeGameIndex = ref(0);
+const filterCategory = ref('all'); // 'all', 'live', 'upcoming', 'final'
 const isSubscribed = ref(false);
 let pollInterval = null;
 
@@ -22,12 +23,19 @@ const fetchHudlScores = async () => {
   }
 };
 
+const filteredGames = computed(() => {
+  if (filterCategory.value === 'live') return games.value.filter(g => g.isLive);
+  if (filterCategory.value === 'upcoming') return games.value.filter(g => g.isFuture);
+  if (filterCategory.value === 'final') return games.value.filter(g => g.status === 'FINAL');
+  return games.value;
+});
+
 const currentGame = computed(() => {
-  return games.value[activeGameIndex.value] || null;
+  return filteredGames.value[activeGameIndex.value] || null;
 });
 
 const subscribeToLiveScore = async () => {
-  if (!currentGame.value) return;
+  if (!currentGame.value || !currentGame.value.isLive) return;
   isSubscribed.value = true;
   await startGameLiveActivity(
     `sparta_${currentGame.value.id}`, 
@@ -49,10 +57,42 @@ onUnmounted(() => {
 
 <template>
   <div class="space-y-4 max-w-xl mx-auto my-6">
-    <!-- Multi-Game Tab Selector (When multiple games are happening) -->
-    <div v-if="games.length > 1" class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+    <!-- Category Filter Tabs -->
+    <div class="flex justify-center gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-xl text-xs font-bold">
+      <button 
+        @click="filterCategory = 'all'; activeGameIndex = 0" 
+        class="px-3 py-1.5 rounded-lg transition"
+        :class="filterCategory === 'all' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
+      >
+        All Games
+      </button>
+      <button 
+        @click="filterCategory = 'live'; activeGameIndex = 0" 
+        class="px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+        :class="filterCategory === 'live' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+      >
+        <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span> Live
+      </button>
+      <button 
+        @click="filterCategory = 'upcoming'; activeGameIndex = 0" 
+        class="px-3 py-1.5 rounded-lg transition"
+        :class="filterCategory === 'upcoming' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
+      >
+        Upcoming
+      </button>
+      <button 
+        @click="filterCategory = 'final'; activeGameIndex = 0" 
+        class="px-3 py-1.5 rounded-lg transition"
+        :class="filterCategory === 'final' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
+      >
+        Final
+      </button>
+    </div>
+
+    <!-- Multi-Game Tab Selector -->
+    <div v-if="filteredGames.length > 1" class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
       <button
-        v-for="(game, idx) in games"
+        v-for="(game, idx) in filteredGames"
         :key="game.id"
         @click="activeGameIndex = idx"
         class="px-3.5 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-2 border"
@@ -60,12 +100,12 @@ onUnmounted(() => {
           ? 'bg-sparta-blue border-blue-500 text-white shadow-lg' 
           : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white'"
       >
-        <span class="w-2 h-2 rounded-full" :class="game.isLive ? 'bg-red-500 animate-pulse' : 'bg-slate-600'"></span>
+        <span class="w-2 h-2 rounded-full" :class="game.isLive ? 'bg-red-500 animate-pulse' : (game.isFuture ? 'bg-blue-400' : 'bg-slate-600')"></span>
         {{ game.sport }} ({{ game.level }})
       </button>
     </div>
 
-    <!-- Active Game Card -->
+    <!-- Active / Selected Game Card -->
     <div v-if="currentGame" class="bg-slate-900 border border-blue-600/30 rounded-xl p-5 text-white shadow-xl">
       <!-- Game Header -->
       <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
@@ -80,11 +120,15 @@ onUnmounted(() => {
             </span>
           </div>
         </div>
+        
+        <!-- Status Badge -->
         <span 
           class="text-xs font-black px-2.5 py-1 rounded-full flex items-center gap-1"
-          :class="currentGame.isLive ? 'bg-red-600/20 text-red-400 animate-pulse' : 'bg-slate-800 text-slate-400'"
+          :class="currentGame.isLive ? 'bg-red-600/20 text-red-400 animate-pulse' : (currentGame.isFuture ? 'bg-blue-600/20 text-blue-400' : 'bg-slate-800 text-slate-400')"
         >
-          <Activity class="w-3 h-3" /> {{ currentGame.isLive ? 'LIVE' : 'SCHEDULED' }}
+          <Activity v-if="currentGame.isLive" class="w-3 h-3" />
+          <Calendar v-else-if="currentGame.isFuture" class="w-3 h-3" />
+          {{ currentGame.isLive ? 'LIVE' : (currentGame.isFuture ? 'UPCOMING' : 'FINAL') }}
         </span>
       </div>
 
@@ -97,12 +141,13 @@ onUnmounted(() => {
             <span v-else class="font-black text-blue-400 text-lg">S</span>
           </div>
           <p class="text-xs text-slate-300 font-bold uppercase truncate">{{ currentGame.homeTeam.name }}</p>
-          <p class="text-4xl font-extrabold text-blue-400">{{ currentGame.homeTeam.score }}</p>
+          <p class="text-4xl font-extrabold text-blue-400">{{ currentGame.isFuture ? '-' : currentGame.homeTeam.score }}</p>
         </div>
 
-        <!-- Clock / Period -->
+        <!-- Clock / Start Time -->
         <div class="space-y-2">
           <span class="text-xs font-mono bg-slate-800 py-1.5 px-3 rounded-md text-slate-200 inline-block border border-slate-700 shadow-inner">
+            <Clock v-if="currentGame.isFuture" class="w-3 h-3 inline mr-1 text-blue-400" />
             {{ currentGame.gameClock }}
           </span>
           <p v-if="currentGame.period" class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -117,7 +162,7 @@ onUnmounted(() => {
             <span v-else class="font-black text-slate-400 text-lg">V</span>
           </div>
           <p class="text-xs text-slate-300 font-bold uppercase truncate">{{ currentGame.awayTeam.name }}</p>
-          <p class="text-4xl font-extrabold text-slate-200">{{ currentGame.awayTeam.score }}</p>
+          <p class="text-4xl font-extrabold text-slate-200">{{ currentGame.isFuture ? '-' : currentGame.awayTeam.score }}</p>
         </div>
       </div>
 
@@ -147,15 +192,15 @@ onUnmounted(() => {
         class="w-full py-2.5 px-4 rounded-lg font-bold text-xs tracking-wider uppercase transition flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         :class="isSubscribed ? 'bg-emerald-600 text-white' : 'bg-sparta-blue hover:bg-blue-700 text-white'"
       >
-        {{ isSubscribed ? '✓ Live Updates Active on Lock Screen' : (currentGame.isLive ? 'Pin Live Score to Lock Screen' : 'No Active Stream to Pin') }}
+        {{ isSubscribed ? '✓ Live Updates Active on Lock Screen' : (currentGame.isLive ? 'Pin Live Score to Lock Screen' : (currentGame.isFuture ? 'Live Pin Available at Gametime' : 'Game Completed')) }}
       </button>
     </div>
 
     <!-- Empty State -->
     <div v-else class="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-400">
       <Trophy class="w-8 h-8 text-slate-600 mx-auto mb-2" />
-      <p class="text-sm font-bold">No High School Games Scheduled Right Now</p>
-      <p class="text-xs text-slate-500 mt-1">Check back closer to game time for live scores and player stats.</p>
+      <p class="text-sm font-bold">No Games Found</p>
+      <p class="text-xs text-slate-500 mt-1">There are no high school games matching the selected filter right now.</p>
     </div>
   </div>
 </template>
