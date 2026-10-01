@@ -1,20 +1,29 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { fetchLatestVideos } from '../services/youtube.js';
-import { Tv, Search, RotateCcw, Calendar, Play, Sparkles } from 'lucide-vue-next';
+import { Tv, Search, RotateCcw, Calendar, Play, Sparkles, AlertCircle } from 'lucide-vue-next';
 
 const newsVideos = ref([]);
 const loading = ref(true);
+const apiError = ref(false);
 const searchQuery = ref('');
-const timeFilter = ref('month'); // Keeps 'month' as default selection
+const timeFilter = ref('month');
 
 const loadNews = async () => {
   loading.value = true;
+  apiError.value = false;
   try {
     const fetched = await fetchLatestVideos('spartannewsdaily8847', 20);
-    newsVideos.value = fetched && fetched.length > 0 ? fetched : getFallbackNews();
+    if (fetched && fetched.length > 0) {
+      newsVideos.value = fetched;
+    } else {
+      newsVideos.value = [];
+      apiError.value = true;
+    }
   } catch (err) {
-    newsVideos.value = getFallbackNews();
+    console.error('Failed to load YouTube news:', err);
+    newsVideos.value = [];
+    apiError.value = true;
   } finally {
     loading.value = false;
   }
@@ -23,7 +32,7 @@ const loadNews = async () => {
 const filteredVideos = computed(() => {
   const now = new Date();
 
-  const filtered = newsVideos.value.filter(video => {
+  return newsVideos.value.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchQuery.value.toLowerCase());
     if (!matchesSearch) return false;
 
@@ -37,35 +46,10 @@ const filteredVideos = computed(() => {
 
     return true;
   });
-
-  // If time filter is too strict and returns empty, fall back to all videos
-  return filtered.length > 0 ? filtered : newsVideos.value;
 });
 
 const featuredVideo = computed(() => filteredVideos.value[0] || null);
 const secondaryVideos = computed(() => filteredVideos.value.slice(1));
-
-function getFallbackNews() {
-  const now = new Date();
-  return [
-    {
-      id: 'dQw4w9WgXcQ',
-      title: 'Spartan News Daily Broadcast & Announcements',
-      description: 'Daily news coverage and announcements for Sparta Senior High School students and staff.',
-      publishedAt: 'Today',
-      publishedAtRaw: now.toISOString(),
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
-    },
-    {
-      id: '3JZ_D3ELwOQ',
-      title: 'Spartan Athletics & Club Activities Weekly Update',
-      description: 'Highlights and upcoming schedules for Sparta High School sports and broadcast club activities.',
-      publishedAt: 'Yesterday',
-      publishedAtRaw: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-      thumbnail: 'https://i.ytimg.com/vi/3JZ_D3ELwOQ/hqdefault.jpg'
-    }
-  ];
-}
 
 onMounted(() => {
   loadNews();
@@ -133,8 +117,16 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div v-if="filteredVideos.length > 0" class="space-y-8">
+    <!-- Skeleton Loading State -->
+    <div v-if="loading" class="space-y-6">
+      <div class="w-full aspect-[21/9] bg-slate-900 animate-pulse rounded-2xl border border-slate-800"></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-for="i in 3" :key="i" class="aspect-video bg-slate-900 animate-pulse rounded-xl border border-slate-800"></div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div v-else-if="filteredVideos.length > 0" class="space-y-8">
       <!-- Featured Video Banner -->
       <div v-if="featuredVideo" class="relative bg-slate-900 border border-blue-600/30 rounded-2xl overflow-hidden shadow-2xl">
         <div class="grid grid-cols-1 lg:grid-cols-12">
@@ -166,7 +158,7 @@ onMounted(() => {
                 {{ featuredVideo.title }}
               </h3>
               <p class="text-xs text-slate-400 line-clamp-4 leading-relaxed">
-                {{ featuredVideo.description || 'Watch the latest morning announcements and news coverage.' }}
+                {{ featuredVideo.description }}
               </p>
             </div>
 
@@ -214,11 +206,11 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center text-slate-400 max-w-xl mx-auto my-12">
-      <Tv class="w-10 h-10 text-slate-600 mx-auto mb-3" />
-      <p class="text-sm font-bold text-slate-300">No news videos found for this filter selection[cite: 11].</p>
-      <p class="text-xs text-slate-500 mt-1">Try switching to 'All Time' or clear your search query.</p>
+    <!-- Empty / API Key Error State -->
+    <div v-else class="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center text-slate-400 max-w-xl mx-auto my-12 space-y-2">
+      <AlertCircle class="w-10 h-10 text-amber-500 mx-auto" />
+      <p class="text-sm font-bold text-slate-200">Unable to load YouTube videos right now.</p>
+      <p class="text-xs text-slate-500">Ensure <code class="bg-slate-800 px-1.5 py-0.5 rounded text-blue-400">VITE_YOUTUBE_API_KEY</code> is configured in Cloudflare Pages environment variables.</p>
     </div>
   </div>
 </template>
