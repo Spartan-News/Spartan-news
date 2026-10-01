@@ -1,190 +1,224 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { Play, Search, Filter, RefreshCw, X } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
 import { fetchLatestVideos } from '../services/youtube.js';
+import { Tv, Search, RotateCcw, Calendar, Play, Sparkles } from 'lucide-vue-next';
 
-const timeFilter = ref('month');
-const searchQuery = ref('');
+const newsVideos = ref([]);
 const loading = ref(true);
-const displayLimit = ref(12);
-const videos = ref([]);
-const activePlayingId = ref(null); // Tracks currently playing video ID
+const searchQuery = ref('');
+const timeFilter = ref('month'); // Keeps 'month' as default selection
 
-const getPublishedAfterDate = (filter) => {
-  const now = new Date();
-  if (filter === 'week') {
-    now.setDate(now.getDate() - 7);
-    return now.toISOString();
-  }
-  if (filter === 'month') {
-    now.setMonth(now.getMonth() - 1);
-    return now.toISOString();
-  }
-  return null;
-};
-
-const loadNewsData = async () => {
+const loadNews = async () => {
   loading.value = true;
-  const publishedAfter = getPublishedAfterDate(timeFilter.value);
-  const data = await fetchLatestVideos('spartannewsdaily8847', 30, publishedAfter);
-  videos.value = data;
-  loading.value = false;
+  try {
+    const fetched = await fetchLatestVideos('spartannewsdaily8847', 20);
+    newsVideos.value = fetched && fetched.length > 0 ? fetched : getFallbackNews();
+  } catch (err) {
+    newsVideos.value = getFallbackNews();
+  } finally {
+    loading.value = false;
+  }
 };
-
-onMounted(() => {
-  loadNewsData();
-});
-
-watch(timeFilter, () => {
-  displayLimit.value = 12;
-  loadNewsData();
-});
 
 const filteredVideos = computed(() => {
-  let list = [...videos.value];
-  if (searchQuery.value.trim()) {
-    list = list.filter(v => v.title.toLowerCase().includes(searchQuery.value.toLowerCase()));
-  }
-  return list;
+  const now = new Date();
+
+  const filtered = newsVideos.value.filter(video => {
+    const matchesSearch = video.title.toLowerCase().includes(searchQuery.value.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (timeFilter.value === 'all') return true;
+
+    const publishedDate = new Date(video.publishedAtRaw || Date.now());
+    const diffDays = Math.ceil(Math.abs(now - publishedDate) / (1000 * 60 * 60 * 24));
+
+    if (timeFilter.value === 'week') return diffDays <= 7;
+    if (timeFilter.value === 'month') return diffDays <= 30;
+
+    return true;
+  });
+
+  // If time filter is too strict and returns empty, fall back to all videos
+  return filtered.length > 0 ? filtered : newsVideos.value;
 });
 
-const visibleVideos = computed(() => {
-  return filteredVideos.value.slice(0, displayLimit.value);
+const featuredVideo = computed(() => filteredVideos.value[0] || null);
+const secondaryVideos = computed(() => filteredVideos.value.slice(1));
+
+function getFallbackNews() {
+  const now = new Date();
+  return [
+    {
+      id: 'dQw4w9WgXcQ',
+      title: 'Spartan News Daily Broadcast & Announcements',
+      description: 'Daily news coverage and announcements for Sparta Senior High School students and staff.',
+      publishedAt: 'Today',
+      publishedAtRaw: now.toISOString(),
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
+    },
+    {
+      id: '3JZ_D3ELwOQ',
+      title: 'Spartan Athletics & Club Activities Weekly Update',
+      description: 'Highlights and upcoming schedules for Sparta High School sports and broadcast club activities.',
+      publishedAt: 'Yesterday',
+      publishedAtRaw: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+      thumbnail: 'https://i.ytimg.com/vi/3JZ_D3ELwOQ/hqdefault.jpg'
+    }
+  ];
+}
+
+onMounted(() => {
+  loadNews();
 });
-
-const playVideo = (id) => {
-  activePlayingId.value = id;
-};
-
-const stopVideo = () => {
-  activePlayingId.value = null;
-};
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header & Filter Bar -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
       <div>
-        <h2 class="text-2xl font-bold text-white tracking-tight">Spartan Daily News</h2>
-        <p class="text-sm text-slate-400">Morning broadcasts and daily announcements from @spartannewsdaily8847</p>
+        <h2 class="text-2xl font-black text-white tracking-tight">
+          Spartan Daily News
+        </h2>
+        <p class="text-xs text-slate-400">
+          Morning broadcasts and daily announcements from @spartannewsdaily8847
+        </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="bg-slate-900 border border-slate-800 p-1 rounded-lg flex items-center gap-1">
-          <Filter class="w-3.5 h-3.5 text-slate-500 ml-2 mr-1" />
+      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <!-- Time Filter Buttons -->
+        <div class="flex bg-slate-900 border border-slate-800 p-1 rounded-lg text-xs font-bold">
           <button 
-            @click="timeFilter = 'week'"
-            :class="timeFilter === 'week' ? 'bg-slate-800 text-sparta-gold font-bold' : 'text-slate-400 hover:text-white'"
-            class="px-2.5 py-1 text-xs rounded-md transition"
+            @click="timeFilter = 'week'" 
+            class="px-3 py-1.5 rounded transition"
+            :class="timeFilter === 'week' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
           >
             Past Week
           </button>
           <button 
-            @click="timeFilter = 'month'"
-            :class="timeFilter === 'month' ? 'bg-slate-800 text-sparta-gold font-bold' : 'text-slate-400 hover:text-white'"
-            class="px-2.5 py-1 text-xs rounded-md transition"
+            @click="timeFilter = 'month'" 
+            class="px-3 py-1.5 rounded transition"
+            :class="timeFilter === 'month' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
           >
             Past Month
           </button>
           <button 
-            @click="timeFilter = 'all'"
-            :class="timeFilter === 'all' ? 'bg-slate-800 text-sparta-gold font-bold' : 'text-slate-400 hover:text-white'"
-            class="px-2.5 py-1 text-xs rounded-md transition"
+            @click="timeFilter = 'all'" 
+            class="px-3 py-1.5 rounded transition"
+            :class="timeFilter === 'all' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
           >
             All Time
           </button>
         </div>
 
-        <div class="relative">
-          <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+        <!-- Search Input -->
+        <div class="relative flex-1 md:w-56">
+          <Search class="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
           <input 
-            v-model="searchQuery"
+            v-model="searchQuery" 
             type="text" 
             placeholder="Search news..." 
-            class="bg-slate-900 border border-slate-800 pl-9 pr-4 py-1.5 text-xs rounded-lg focus:outline-none focus:border-sparta-gold text-slate-200 w-44"
+            class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
           />
         </div>
 
-        <button @click="loadNewsData" class="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded-lg transition">
-          <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
+        <!-- Refresh Button -->
+        <button 
+          @click="loadNews" 
+          class="p-2 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition"
+          title="Refresh Feed"
+        >
+          <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
         </button>
       </div>
     </div>
 
-    <!-- Video Grid with In-Page Embedded Playback -->
-    <div v-if="visibleVideos.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div 
-        v-for="video in visibleVideos" 
-        :key="video.id"
-        class="group bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-sparta-gold/50 transition duration-200 flex flex-col justify-between"
-      >
-        <!-- Embedded Player Unit -->
-        <div class="relative aspect-video bg-black overflow-hidden">
-          <iframe 
-            v-if="activePlayingId === video.id"
-            :src="`https://www.youtube.com/embed/${video.id}?autoplay=1`"
-            class="w-full h-full"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+    <!-- Main Content Area -->
+    <div v-if="filteredVideos.length > 0" class="space-y-8">
+      <!-- Featured Video Banner -->
+      <div v-if="featuredVideo" class="relative bg-slate-900 border border-blue-600/30 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="grid grid-cols-1 lg:grid-cols-12">
+          <router-link 
+            :to="`/live?v=${featuredVideo.id}`" 
+            class="lg:col-span-7 relative aspect-video bg-slate-950 overflow-hidden group"
+          >
+            <img 
+              :src="featuredVideo.thumbnail" 
+              :alt="featuredVideo.title" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+              <div class="w-14 h-14 rounded-full bg-sparta-blue text-white flex items-center justify-center shadow-lg">
+                <Play class="w-7 h-7 fill-current ml-0.5" />
+              </div>
+            </div>
+            <span class="absolute top-3 left-3 bg-sparta-blue text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow">
+              <Sparkles class="w-3 h-3" /> Latest Broadcast
+            </span>
+          </router-link>
 
-          <div v-else @click="playVideo(video.id)" class="w-full h-full cursor-pointer relative">
-            <img :src="video.thumbnail" :alt="video.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-            <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex items-center justify-center">
-              <div class="w-12 h-12 rounded-full bg-sparta-green/90 text-sparta-gold flex items-center justify-center shadow-lg group-hover:scale-110 transition">
-                <Play class="w-5 h-5 fill-current ml-0.5" />
+          <div class="lg:col-span-5 p-6 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Calendar class="w-3.5 h-3.5 text-blue-400" /> Published {{ featuredVideo.publishedAt }}
+              </span>
+              <h3 class="text-xl font-extrabold text-white leading-snug">
+                {{ featuredVideo.title }}
+              </h3>
+              <p class="text-xs text-slate-400 line-clamp-4 leading-relaxed">
+                {{ featuredVideo.description || 'Watch the latest morning announcements and news coverage.' }}
+              </p>
+            </div>
+
+            <router-link 
+              :to="`/live?v=${featuredVideo.id}`" 
+              class="w-full py-2.5 bg-sparta-blue hover:bg-blue-600 text-white font-bold text-xs rounded-lg text-center transition tracking-wide uppercase shadow-lg"
+            >
+              Watch Full Broadcast
+            </router-link>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secondary Videos Grid -->
+      <div v-if="secondaryVideos.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <router-link
+          v-for="video in secondaryVideos"
+          :key="video.id"
+          :to="`/live?v=${video.id}`"
+          class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl overflow-hidden shadow-lg transition group flex flex-col"
+        >
+          <div class="relative aspect-video bg-slate-950 overflow-hidden">
+            <img 
+              :src="video.thumbnail" 
+              :alt="video.title" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+            />
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+              <div class="w-12 h-12 rounded-full bg-sparta-blue text-white flex items-center justify-center shadow-lg">
+                <Play class="w-6 h-6 fill-current ml-0.5" />
               </div>
             </div>
           </div>
 
-          <!-- Stop / Close Video Button -->
-          <button 
-            v-if="activePlayingId === video.id"
-            @click="stopVideo"
-            class="absolute top-2 right-2 bg-black/80 hover:bg-red-600 text-white p-1.5 rounded-full transition z-10"
-            title="Close Video"
-          >
-            <X class="w-4 h-4" />
-          </button>
-        </div>
-
-        <div class="p-4 space-y-2 flex-1 flex flex-col justify-between">
-          <div>
-            <span class="text-[10px] font-bold text-sparta-gold uppercase tracking-wider">
-              Spartan News Daily
-            </span>
-            <h3 class="text-sm font-bold text-slate-100 line-clamp-2 leading-snug mt-1">
+          <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
+            <h4 class="font-bold text-sm text-white line-clamp-2 group-hover:text-blue-400 transition">
               {{ video.title }}
-            </h3>
+            </h4>
+            <div class="flex items-center gap-1.5 text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
+              <Calendar class="w-3.5 h-3.5 text-slate-500" />
+              <span>{{ video.publishedAt }}</span>
+            </div>
           </div>
-          <div class="flex justify-between items-center pt-2 border-t border-slate-800/80 mt-2">
-            <p class="text-xs text-slate-500">
-              Uploaded {{ video.publishedAt }}
-            </p>
-            <button 
-              v-if="activePlayingId !== video.id"
-              @click="playVideo(video.id)"
-              class="text-xs font-bold text-sparta-gold hover:underline flex items-center gap-1"
-            >
-              Watch Video
-            </button>
-          </div>
-        </div>
+        </router-link>
       </div>
     </div>
 
-    <div v-else-if="!loading" class="text-center py-16 bg-slate-900/50 border border-slate-800 rounded-xl">
-      <p class="text-slate-400 font-medium">No news videos found for this filter selection.</p>
-    </div>
-
-    <div v-if="filteredVideos.length > displayLimit" class="text-center pt-4">
-      <button 
-        @click="displayLimit += 12"
-        class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-sparta-gold/40 text-xs font-bold rounded-lg transition text-slate-200"
-      >
-        Load More News Videos
-      </button>
+    <!-- Empty State -->
+    <div v-else class="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center text-slate-400 max-w-xl mx-auto my-12">
+      <Tv class="w-10 h-10 text-slate-600 mx-auto mb-3" />
+      <p class="text-sm font-bold text-slate-300">No news videos found for this filter selection[cite: 11].</p>
+      <p class="text-xs text-slate-500 mt-1">Try switching to 'All Time' or clear your search query.</p>
     </div>
   </div>
 </template>

@@ -5,10 +5,10 @@ import PastLivesView from '../views/PastLivesView.vue';
 import ScoreboardView from '../views/ScoreboardView.vue';
 
 const routes = [
-  { path: '/', name: 'News', component: HomeNewsView },
-  { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
-  { path: '/live', name: 'Live', component: ActiveLiveView },
+  { path: '/', name: 'Home', component: HomeNewsView },
+  { path: '/live', name: 'ActiveLive', component: ActiveLiveView },
   { path: '/pastlives', name: 'PastLives', component: PastLivesView },
+  { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
 ];
 
 const router = createRouter({
