@@ -5,20 +5,13 @@ const CHANNELS = {
   live: 'SpartanNewsLive'
 };
 
-// Cache resolved IDs so we don't waste API quota
 const channelIdCache = {};
 
-/**
- * Format handle to guarantee leading '@'
- */
 function ensureHandlePrefix(handle) {
   if (!handle) return '';
   return handle.startsWith('@') ? handle : `@${handle}`;
 }
 
-/**
- * Resolve YouTube Channel ID from handle
- */
 async function getChannelId(handle) {
   const formattedHandle = ensureHandlePrefix(handle);
 
@@ -45,9 +38,6 @@ async function getChannelId(handle) {
   }
 }
 
-/**
- * Decode HTML entities in YouTube titles (&amp; -> &)
- */
 function decodeHtmlEntities(str) {
   if (!str) return '';
   const parser = new DOMParser();
@@ -55,9 +45,6 @@ function decodeHtmlEntities(str) {
   return doc.body.textContent || str;
 }
 
-/**
- * Fetch latest uploaded videos for a specific channel handle
- */
 export async function fetchLatestVideos(handle = CHANNELS.daily, maxResults = 12) {
   try {
     const channelId = await getChannelId(handle);
@@ -85,6 +72,60 @@ export async function fetchLatestVideos(handle = CHANNELS.daily, maxResults = 12
     }));
   } catch (error) {
     console.error('Error fetching YouTube videos:', error);
+    return [];
+  }
+}
+
+export async function checkLiveStatus(handle = CHANNELS.live) {
+  try {
+    const channelId = await getChannelId(handle);
+    if (!channelId) return { isLive: false, videoId: null, title: 'Channel not found' };
+
+    const liveRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${API_KEY}`
+    );
+    const liveData = await liveRes.json();
+
+    if (liveData.items && liveData.items.length > 0) {
+      return {
+        isLive: true,
+        videoId: liveData.items[0].id.videoId,
+        title: decodeHtmlEntities(liveData.items[0].snippet.title),
+        thumbnail: liveData.items[0].snippet.thumbnails.high?.url
+      };
+    }
+    return { isLive: false, videoId: null, title: 'No stream currently active' };
+  } catch (error) {
+    console.error('Error checking live stream status:', error);
+    return { isLive: false, videoId: null };
+  }
+}
+
+export async function fetchUpcomingStreams(handle = CHANNELS.live) {
+  try {
+    const channelId = await getChannelId(handle);
+    if (!channelId) return [];
+
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=upcoming&type=video&order=date&key=${API_KEY}`
+    );
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0) return [];
+
+    return data.items.map(item => ({
+      id: item.id.videoId,
+      title: decodeHtmlEntities(item.snippet.title),
+      scheduledTime: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      })
+    }));
+  } catch (error) {
+    console.error('Error fetching upcoming streams:', error);
     return [];
   }
 }
