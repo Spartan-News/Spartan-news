@@ -1,12 +1,18 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { Trophy, Activity, MapPin, User, Calendar, Clock } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { Trophy, Activity, MapPin, User, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { startGameLiveActivity } from '../services/notifications.js';
 
 const games = ref([]);
 const activeGameIndex = ref(0);
-const filterCategory = ref('all'); // 'all', 'live', 'upcoming', 'final'
+const filterCategory = ref('all');
 const isSubscribed = ref(false);
+
+// Scroll indicator states & refs
+const tabsContainer = ref(null);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
+
 let pollInterval = null;
 
 const fetchHudlScores = async () => {
@@ -16,11 +22,26 @@ const fetchHudlScores = async () => {
       const data = await res.json();
       if (data && Array.isArray(data.games)) {
         games.value = data.games;
+        await nextTick();
+        checkScrollOverflow();
       }
     }
   } catch (err) {
     console.error("Failed to fetch Hudl scores:", err);
   }
+};
+
+const checkScrollOverflow = () => {
+  if (!tabsContainer.value) return;
+  const { scrollLeft, scrollWidth, clientWidth } = tabsContainer.value;
+  canScrollLeft.value = scrollLeft > 5;
+  canScrollRight.value = scrollLeft < scrollWidth - clientWidth - 5;
+};
+
+const scrollTabs = (direction) => {
+  if (!tabsContainer.value) return;
+  const scrollAmount = direction === 'left' ? -150 : 150;
+  tabsContainer.value.scrollBy({ left: scrollAmount, behavior: 'smooth' });
 };
 
 const filteredGames = computed(() => {
@@ -48,10 +69,12 @@ const subscribeToLiveScore = async () => {
 onMounted(() => {
   fetchHudlScores();
   pollInterval = setInterval(fetchHudlScores, 30000);
+  window.addEventListener('resize', checkScrollOverflow);
 });
 
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval);
+  window.removeEventListener('resize', checkScrollOverflow);
 });
 </script>
 
@@ -60,28 +83,28 @@ onUnmounted(() => {
     <!-- Category Filter Tabs -->
     <div class="flex justify-center gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-xl text-xs font-bold">
       <button 
-        @click="filterCategory = 'all'; activeGameIndex = 0" 
+        @click="filterCategory = 'all'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
         class="px-3 py-1.5 rounded-lg transition"
         :class="filterCategory === 'all' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
       >
         All Games
       </button>
       <button 
-        @click="filterCategory = 'live'; activeGameIndex = 0" 
+        @click="filterCategory = 'live'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
         class="px-3 py-1.5 rounded-lg transition flex items-center gap-1"
         :class="filterCategory === 'live' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'"
       >
         <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span> Live
       </button>
       <button 
-        @click="filterCategory = 'upcoming'; activeGameIndex = 0" 
+        @click="filterCategory = 'upcoming'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
         class="px-3 py-1.5 rounded-lg transition"
         :class="filterCategory === 'upcoming' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
       >
         Upcoming
       </button>
       <button 
-        @click="filterCategory = 'final'; activeGameIndex = 0" 
+        @click="filterCategory = 'final'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
         class="px-3 py-1.5 rounded-lg transition"
         :class="filterCategory === 'final' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
       >
@@ -89,23 +112,50 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- Multi-Game Tab Selector -->
-    <div v-if="filteredGames.length > 1" class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-      <button
-        v-for="(game, idx) in filteredGames"
-        :key="game.id"
-        @click="activeGameIndex = idx"
-        class="px-3.5 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-2 border"
-        :class="activeGameIndex === idx 
-          ? 'bg-sparta-blue border-blue-500 text-white shadow-lg' 
-          : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white'"
+    <!-- Multi-Game Tab Selector with Arrow Indicators -->
+    <div v-if="filteredGames.length > 1" class="relative flex items-center group">
+      <!-- Left Arrow Button -->
+      <button 
+        v-if="canScrollLeft"
+        @click="scrollTabs('left')"
+        class="absolute left-0 z-10 p-1.5 bg-slate-900/90 border border-slate-700 text-white rounded-full shadow-lg backdrop-blur hover:bg-sparta-blue transition -ml-2"
+        title="Scroll Left"
       >
-        <span class="w-2 h-2 rounded-full" :class="game.isLive ? 'bg-red-500 animate-pulse' : (game.isFuture ? 'bg-blue-400' : 'bg-slate-600')"></span>
-        {{ game.sport }} ({{ game.level }})
+        <ChevronLeft class="w-4 h-4" />
+      </button>
+
+      <!-- Scrollable Tab Container -->
+      <div 
+        ref="tabsContainer"
+        @scroll="checkScrollOverflow"
+        class="flex gap-2 overflow-x-auto py-1 px-1 scrollbar-none w-full scroll-smooth"
+      >
+        <button
+          v-for="(game, idx) in filteredGames"
+          :key="game.id"
+          @click="activeGameIndex = idx"
+          class="px-3.5 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-2 border flex-shrink-0"
+          :class="activeGameIndex === idx 
+            ? 'bg-sparta-blue border-blue-500 text-white shadow-lg' 
+            : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white'"
+        >
+          <span class="w-2 h-2 rounded-full" :class="game.isLive ? 'bg-red-500 animate-pulse' : (game.isFuture ? 'bg-blue-400' : 'bg-slate-600')"></span>
+          {{ game.sport }} ({{ game.level }})
+        </button>
+      </div>
+
+      <!-- Right Arrow Button -->
+      <button 
+        v-if="canScrollRight"
+        @click="scrollTabs('right')"
+        class="absolute right-0 z-10 p-1.5 bg-slate-900/90 border border-slate-700 text-white rounded-full shadow-lg backdrop-blur hover:bg-sparta-blue transition -mr-2"
+        title="Scroll Right"
+      >
+        <ChevronRight class="w-4 h-4" />
       </button>
     </div>
 
-    <!-- Active / Selected Game Card -->
+    <!-- Active Game Card -->
     <div v-if="currentGame" class="bg-slate-900 border border-blue-600/30 rounded-xl p-5 text-white shadow-xl">
       <!-- Game Header -->
       <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
