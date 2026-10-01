@@ -1,6 +1,6 @@
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 
-const domain = 'https://spartan-news.pages.dev';
+const domain = 'https://shsnews.live';
 const routes = ['', '/scoreboard', '/live', '/pastlives'];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -21,4 +21,4 @@ if (!existsSync('dist')) {
 }
 
 writeFileSync('dist/sitemap.xml', sitemap);
-console.log('Successfully generated dist/sitemap.xml');
+console.log('Successfully generated dist/sitemap.xml for shsnews.live');
