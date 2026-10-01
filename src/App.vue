@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue';
-import { Radio, Tv, History, Sun, Moon } from 'lucide-vue-next';
+import { Radio, Tv, History, Sun, Moon, Trophy } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
 
@@ -8,7 +8,7 @@ const { isDark, initTheme, toggleTheme } = useTheme();
 
 onMounted(() => {
   initTheme();
-  initNotifications(); // <-- THIS WAS MISSING
+  initNotifications();
 });
 </script>
 
@@ -45,6 +45,14 @@ onMounted(() => {
               <Tv class="w-3.5 h-3.5" /> Daily News
             </router-link>
             
+            <router-link 
+              to="/scoreboard" 
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              active-class="bg-white text-sparta-blue font-extrabold shadow"
+            >
+              <Trophy class="w-3.5 h-3.5 text-amber-400" /> Scores
+            </router-link>
+
             <router-link 
               to="/live" 
               class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
