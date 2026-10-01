@@ -5,38 +5,76 @@ const CHANNELS = {
   live: 'SpartanNewsLive'
 };
 
+// Cache resolved IDs so we don't waste API quota
+const channelIdCache = {};
+
+/**
+ * Format handle to guarantee leading '@'
+ */
+function ensureHandlePrefix(handle) {
+  if (!handle) return '';
+  return handle.startsWith('@') ? handle : `@${handle}`;
+}
+
+/**
+ * Resolve YouTube Channel ID from handle
+ */
+async function getChannelId(handle) {
+  const formattedHandle = ensureHandlePrefix(handle);
+
+  if (channelIdCache[formattedHandle]) {
+    return channelIdCache[formattedHandle];
+  }
+
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(formattedHandle)}&key=${API_KEY}`
+    );
+    const data = await res.json();
+
+    if (data.items && data.items.length > 0) {
+      const channelId = data.items[0].id;
+      channelIdCache[formattedHandle] = channelId;
+      return channelId;
+    }
+    console.warn(`No channel found for handle: ${formattedHandle}`);
+    return null;
+  } catch (err) {
+    console.error('Error resolving channel ID:', err);
+    return null;
+  }
+}
+
+/**
+ * Decode HTML entities in YouTube titles (&amp; -> &)
+ */
+function decodeHtmlEntities(str) {
+  if (!str) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, 'text/html');
+  return doc.body.textContent || str;
+}
+
 /**
  * Fetch latest uploaded videos for a specific channel handle
- * Supports time filtering (publishedAfter) and custom result limits
  */
-export async function fetchLatestVideos(handle = CHANNELS.daily, maxResults = 12, publishedAfter = null) {
+export async function fetchLatestVideos(handle = CHANNELS.daily, maxResults = 12) {
   try {
-    // 1. Get channel ID from handle
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
-    );
-    const channelData = await channelRes.json();
-    if (!channelData.items?.length) return [];
+    const channelId = await getChannelId(handle);
+    if (!channelId) return [];
 
-    const channelId = channelData.items[0].id;
-
-    // 2. Build search query
-    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=${maxResults}&type=video&key=${API_KEY}`;
-    
-    if (publishedAfter) {
-      url += `&publishedAfter=${publishedAfter}`;
-    }
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=${maxResults}&type=video&key=${API_KEY}`;
 
     const videosRes = await fetch(url);
     const videosData = await videosRes.json();
 
     if (!videosData.items) return [];
 
-    // 3. Format and return video objects
     return videosData.items.map(item => ({
       id: item.id.videoId,
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url,
+      title: decodeHtmlEntities(item.snippet.title),
+      description: item.snippet.description,
+      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
       publishedAtRaw: item.snippet.publishedAt,
       publishedAt: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, {
         year: 'numeric',
@@ -47,75 +85,6 @@ export async function fetchLatestVideos(handle = CHANNELS.daily, maxResults = 12
     }));
   } catch (error) {
     console.error('Error fetching YouTube videos:', error);
-    return [];
-  }
-}
-
-/**
- * Check if a channel currently has an active live stream
- */
-export async function checkLiveStatus(handle = CHANNELS.live) {
-  try {
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
-    );
-    const channelData = await channelRes.json();
-    if (!channelData.items?.length) return null;
-
-    const channelId = channelData.items[0].id;
-
-    const liveRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${API_KEY}`
-    );
-    const liveData = await liveRes.json();
-
-    if (liveData.items && liveData.items.length > 0) {
-      return {
-        isLive: true,
-        videoId: liveData.items[0].id.videoId,
-        title: liveData.items[0].snippet.title,
-      };
-    }
-    return { isLive: false, videoId: null, title: 'No stream currently active' };
-  } catch (error) {
-    console.error('Error checking live stream status:', error);
-    return { isLive: false, videoId: null };
-  }
-}
-
-/**
- * Fetch upcoming scheduled live streams for a channel
- */
-export async function fetchUpcomingStreams(handle = CHANNELS.live) {
-  try {
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
-    );
-    const channelData = await channelRes.json();
-    if (!channelData.items?.length) return [];
-
-    const channelId = channelData.items[0].id;
-
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=upcoming&type=video&order=date&key=${API_KEY}`
-    );
-    const data = await res.json();
-
-    if (!data.items || data.items.length === 0) return [];
-
-    return data.items.map(item => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      scheduledTime: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      })
-    }));
-  } catch (error) {
-    console.error('Error fetching upcoming streams:', error);
     return [];
   }
 }
