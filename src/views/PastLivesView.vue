@@ -1,170 +1,161 @@
-<script setup>
-import { ref, computed, onMounted } from 'vue';
-import { fetchLatestVideos } from '../services/youtube.js';
-import { Tv, Search, RotateCcw, Calendar, Play, AlertCircle } from 'lucide-vue-next';
-
-const streams = ref([]);
-const loading = ref(true);
-const apiError = ref(false);
-const searchQuery = ref('');
-const timeFilter = ref('month');
-
-const loadPastStreams = async () => {
-  loading.value = true;
-  apiError.value = false;
-  try {
-    // Fetch completed broadcasts and video archives for SpartanNewsLive
-    const fetched = await fetchLatestVideos('SpartanNewsLive', 24);
-    if (fetched && fetched.length > 0) {
-      streams.value = fetched;
-    } else {
-      streams.value = [];
-      apiError.value = true;
-    }
-  } catch (err) {
-    console.error('Failed to load past live stream replays:', err);
-    streams.value = [];
-    apiError.value = true;
-  } finally {
-    loading.value = false;
-  }
-};
-
-const filteredStreams = computed(() => {
-  const now = new Date();
-
-  return streams.value.filter(stream => {
-    const matchesSearch = stream.title.toLowerCase().includes(searchQuery.value.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (timeFilter.value === 'all') return true;
-
-    const publishedDate = new Date(stream.publishedAtRaw || Date.now());
-    const diffDays = Math.ceil(Math.abs(now - publishedDate) / (1000 * 60 * 60 * 24));
-
-    if (timeFilter.value === 'week') return diffDays <= 7;
-    if (timeFilter.value === 'month') return diffDays <= 30;
-
-    return true;
-  });
-});
-
-onMounted(() => {
-  loadPastStreams();
-});
-</script>
-
 <template>
-  <div class="max-w-6xl mx-auto space-y-6">
-    <!-- Header & Controls -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
-      <div>
-        <h2 class="text-2xl font-black text-white tracking-tight">
-          Past Live Streams & Replays
-        </h2>
-        <p class="text-xs text-slate-400">
-          Stream recordings and sports replays from @SpartanNewsLive
-        </p>
-      </div>
+  <div class="past-lives-container max-w-7xl mx-auto px-4 py-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold tracking-tight text-white">Past Live Streams</h1>
+      <p class="text-slate-400 mt-1">Watch archived live broadcasts, sports events, and live stream replays.</p>
+    </header>
 
-      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-        <!-- Time Filter Buttons -->
-        <div class="flex bg-slate-900 border border-slate-800 p-1 rounded-lg text-xs font-bold">
-          <button 
-            @click="timeFilter = 'week'" 
-            class="px-3 py-1.5 rounded transition"
-            :class="timeFilter === 'week' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
-          >
-            Past Week
-          </button>
-          <button 
-            @click="timeFilter = 'month'" 
-            class="px-3 py-1.5 rounded transition"
-            :class="timeFilter === 'month' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
-          >
-            Past Month
-          </button>
-          <button 
-            @click="timeFilter = 'all'" 
-            class="px-3 py-1.5 rounded transition"
-            :class="timeFilter === 'all' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
-          >
-            All Time
-          </button>
-        </div>
-
-        <!-- Search Input -->
-        <div class="relative flex-1 md:w-56">
-          <Search class="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Search stream replays..." 
-            class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-
-        <!-- Refresh Button -->
-        <button 
-          @click="loadPastStreams" 
-          class="p-2 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition"
-          title="Refresh Feed"
-        >
-          <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
-        </button>
-      </div>
+    <!-- Error State -->
+    <div v-if="errorMessage" class="bg-red-900/40 border border-red-700 text-red-200 p-4 rounded-xl mb-6">
+      <p class="font-medium">{{ errorMessage }}</p>
     </div>
 
-    <!-- Skeleton Loading Grid -->
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="i in 6" :key="i" class="aspect-video bg-slate-900 animate-pulse rounded-xl border border-slate-800"></div>
+    <!-- Loading State -->
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-for="n in 6" :key="n" class="bg-slate-800/50 rounded-xl h-64 animate-pulse border border-slate-700/50"></div>
     </div>
 
-    <!-- Live Stream Replays Grid -->
-    <div v-else-if="filteredStreams.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <router-link
-        v-for="stream in filteredStreams"
-        :key="stream.id"
-        :to="`/live?v=${stream.id}`"
-        class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl overflow-hidden shadow-lg transition group flex flex-col"
+    <!-- Video Grid -->
+    <div v-else-if="videos.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div 
+        v-for="video in videos" 
+        :key="video.id"
+        class="group bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer"
+        @click="playVideo(video)"
       >
-        <!-- Thumbnail -->
-        <div class="relative aspect-video bg-slate-950 overflow-hidden">
+        <div class="relative aspect-video overflow-hidden bg-slate-900">
           <img 
-            :src="stream.thumbnail" 
-            :alt="stream.title" 
-            class="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+            :src="video.thumbnail" 
+            :alt="video.title"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
           />
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <div class="w-12 h-12 rounded-full bg-sparta-blue text-white flex items-center justify-center shadow-lg">
-              <Play class="w-6 h-6 fill-current ml-0.5" />
+          <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+            <!-- Play Icon -->
+            <div class="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current ml-0.5" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
             </div>
           </div>
-        </div>
-
-        <!-- Info -->
-        <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
-          <h3 class="font-bold text-sm text-white line-clamp-2 group-hover:text-blue-400 transition">
-            {{ stream.title }}
-          </h3>
-          <div class="flex items-center gap-1.5 text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
-            <Calendar class="w-3.5 h-3.5 text-slate-500" />
-            <span>Streamed {{ stream.publishedAt }}</span>
+          <div class="absolute bottom-2 right-2 bg-black/80 text-xs px-2 py-1 rounded text-slate-200 font-mono">
+            {{ video.publishedAt }}
           </div>
         </div>
-      </router-link>
+
+        <div class="p-4">
+          <h3 class="text-base font-semibold text-white line-clamp-2 group-hover:text-sky-400 transition-colors">
+            {{ video.title }}
+          </h3>
+          <p class="text-xs text-slate-400 mt-2 line-clamp-2">
+            {{ video.description || 'No description available.' }}
+          </p>
+        </div>
+      </div>
     </div>
 
-    <!-- Empty / Error State -->
-    <div v-else class="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center text-slate-400 max-w-xl mx-auto my-12 space-y-2">
-      <AlertCircle v-if="apiError" class="w-10 h-10 text-amber-500 mx-auto" />
-      <Tv v-else class="w-10 h-10 text-slate-600 mx-auto" />
-      <p class="text-sm font-bold text-slate-200">
-        {{ apiError ? 'Unable to load YouTube stream replays.' : 'No stream recordings found for the selected timeframe.' }}
-      </p>
-      <p class="text-xs text-slate-500">
-        {{ apiError ? 'Ensure VITE_YOUTUBE_API_KEY is configured in your .env.local file or Cloudflare Pages environment variables.' : 'Try switching to All Time or clearing your search query.' }}
-      </p>
+    <!-- Empty State -->
+    <div v-else class="text-center py-12 bg-slate-800/30 rounded-2xl border border-slate-800">
+      <p class="text-slate-400">No past live streams found.</p>
+    </div>
+
+    <!-- Embedded Video Modal Player -->
+    <div 
+      v-if="activeVideo" 
+      class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      @click.self="closeVideo"
+    >
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-slate-800">
+          <h2 class="text-lg font-semibold text-white truncate pr-4">{{ activeVideo.title }}</h2>
+          <button 
+            class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-full transition-colors"
+            @click="closeVideo"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="relative aspect-video w-full bg-black">
+          <iframe 
+            :src="`https://www.youtube-nocookie.com/embed/${activeVideo.id}?autoplay=1&rel=0`" 
+            class="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <div class="p-4 bg-slate-900/90 text-sm text-slate-300 max-h-36 overflow-y-auto">
+          <p class="whitespace-pre-line">{{ activeVideo.description || 'No description provided.' }}</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const videos = ref([])
+const isLoading = ref(true)
+const errorMessage = ref('')
+const activeVideo = ref(null)
+
+const API_BASE_URL = 'https://spartan-youtube-notifier.lsg1.workers.dev'
+
+onMounted(async () => {
+  await fetchPastStreams()
+})
+
+async function fetchPastStreams() {
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    // Query handle for live stream channel
+    const res = await fetch(`${API_BASE_URL}/youtube-feed?handle=SpartanNewsLive`)
+    if (!res.ok) {
+      throw new Error(`Failed to fetch live streams (Status ${res.status})`)
+    }
+
+    const data = await res.json()
+    if (data.error) {
+      errorMessage.value = data.error
+    }
+
+    // Exclude daily news uploads if both handles share a playlist
+    const rawItems = data.items || []
+    videos.value = rawItems.filter(item => {
+      const titleLower = (item.title || '').toLowerCase()
+      return !titleLower.includes('spartan news 10-') && !titleLower.includes('spartan news 9-')
+    })
+
+    // Fallback if filtering removed all items
+    if (videos.value.length === 0 && rawItems.length > 0) {
+      videos.value = rawItems
+    }
+  } catch (err) {
+    console.error('Error loading past streams:', err)
+    errorMessage.value = 'Unable to load past live streams.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function playVideo(video) {
+  if (video.isLive) {
+    router.push({ name: 'active-live', query: { v: video.id } })
+    return
+  }
+
+  activeVideo.value = video
+}
+
+function closeVideo() {
+  activeVideo.value = null
+}
+</script>

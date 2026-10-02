@@ -3,12 +3,14 @@ import HomeNewsView from '../views/HomeNewsView.vue';
 import ActiveLiveView from '../views/ActiveLiveView.vue';
 import PastLivesView from '../views/PastLivesView.vue';
 import ScoreboardView from '../views/ScoreboardView.vue';
+import SubscribeView from '../views/SubscribeView.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: HomeNewsView },
   { path: '/live', name: 'ActiveLive', component: ActiveLiveView },
   { path: '/pastlives', name: 'PastLives', component: PastLivesView },
   { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
+  { path: '/subscribe', name: 'Subscribe', component: SubscribeView },
 ];
 
 const router = createRouter({

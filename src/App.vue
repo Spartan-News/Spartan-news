@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue';
-import { Radio, Tv, History, Sun, Moon, Trophy } from 'lucide-vue-next';
+import { Radio, Tv, History, Sun, Moon, Trophy, Mail } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
 
@@ -9,6 +9,22 @@ const { isDark, initTheme, toggleTheme } = useTheme();
 onMounted(() => {
   initTheme();
   initNotifications();
+
+  // Load OneSignal Web SDK
+  if (!document.getElementById('onesignal-sdk')) {
+    const script = document.createElement('script');
+    script.id = 'onesignal-sdk';
+    script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+    script.defer = true;
+    document.head.appendChild(script);
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OneSignal) => {
+      await OneSignal.init({
+        appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+      });
+    });
+  }
 });
 </script>
 
@@ -68,6 +84,14 @@ onMounted(() => {
             >
               <History class="w-3.5 h-3.5" /> Past Streams
             </router-link>
+
+            <router-link 
+              to="/subscribe" 
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              active-class="bg-white text-sparta-blue font-extrabold shadow"
+            >
+              <Mail class="w-3.5 h-3.5 text-emerald-400" /> Subscribe
+            </router-link>
           </nav>
 
           <!-- Light / Dark Mode Toggle Button -->
@@ -90,8 +114,10 @@ onMounted(() => {
     <footer class="border-t border-slate-300 dark:border-slate-800 mt-20 py-8 bg-slate-200 dark:bg-slate-950 text-slate-600 dark:text-slate-400">
       <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
         <p class="text-xs font-semibold">Sparta Senior High School • Live Streaming & Broadcast Club</p>
-        <div class="flex justify-center items-center gap-4 text-[11px] text-slate-500">
+        <div class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 text-[11px] text-slate-500">
           <span>Built for Spartan News Network • Sparta, Michigan</span>
+          <span>•</span>
+          <span>Designed & Coded by Peyton Gordon</span>
           <span>•</span>
           <a href="/sitemap.xml" target="_blank" class="hover:underline text-blue-600 dark:text-blue-400">Sitemap</a>
         </div>
