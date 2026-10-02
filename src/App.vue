@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue';
-import { Radio, Tv, History, Sun, Moon, Trophy, Mail } from 'lucide-vue-next';
+import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Vote } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
 
@@ -59,6 +59,14 @@ onMounted(() => {
               exact-active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <Tv class="w-3.5 h-3.5" /> Daily News
+            </router-link>
+
+            <router-link 
+              to="/polls" 
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              active-class="bg-white text-sparta-blue font-extrabold shadow"
+            >
+              <Vote class="w-3.5 h-3.5 text-purple-400" /> Polls
             </router-link>
             
             <router-link 
