@@ -1,4 +1,4 @@
-const WORKER_URL = 'https://spartan-youtube-notifier.lsg1.workers.dev';
+const WORKER_URL = 'https://noti.router.app.shsnews.live';
 
 export async function fetchLatestVideos(handle = 'spartannewsdaily8847') {
   try {
