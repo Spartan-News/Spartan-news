@@ -1,37 +1,76 @@
-# Sparta Senior High School News Live Web App
+# 🗞️️ Spartan News (shsnews.live)
 
-A modern, responsive web application built for **Sparta Senior High School (Sparta, MI)** that integrates live event streaming and video archives directly from the official YouTube channels: **@SpartanNewsLive** and **@spartannewsdaily8847**.
-
----
-
-## Features
-
-* **Active Live Stream Detection**: Dynamically checks `@SpartanNewsLive` and renders an embedded live player with the active stream title whenever a broadcast goes live.
-* **Dynamic Broadcast Schedule**: Automatically queries scheduled YouTube live streams (`eventType=upcoming`) and alerts viewers to upcoming events.
-* **Separated Dedicated Views**:
-  * **`/` (Daily News)**: Browse morning announcements and daily news broadcasts from `@spartannewsdaily8847`.
-  * **`/live` (Active Stream)**: Dedicated live broadcast unit and event schedule.
-  * **`/pastlives` (Past Streams & Replays)**: Watch past live event recordings and game replays.
-* **In-Page Embedded Playback**: Click any video thumbnail across all feeds to play videos directly on the site without leaving the page.
-* **Time & Search Filtering**: Filter video archives by timeframe (**Past Week**, **Past Month**, **All Time**) or search by video title keywords.
-* **Royal Blue & White Theme**: Styled to match Sparta High School's school colors, featuring dark mode support with theme preference persisted via `localStorage`.
+A modern, fast, and accessible web application for Sparta Senior High School news broadcasts, sports scoreboards, live stream notifications, and interactive student polls. Built with Vue 3, Vite, Tailwind CSS, Firebase, and Cloudflare Workers.
 
 ---
 
-## Tech Stack
+## 🚀 Key Features
 
-* **Framework**: Vue 3 (Composition API with `<script setup>`)
-* **Routing**: Vue Router 4
-* **Build Tool**: Vite
-* **Styling**: Tailwind CSS v4
-* **Icons**: Lucide Vue Next
-* **API**: Google YouTube Data API v3
+* **📺 Daily News Feed:** Interactive video player and modal overlay for watching daily announcements and school broadcasts on-site.
+* **🔴 Live Stream Hub:** Dedicated view for active live streams with automatic status indicators and archived past broadcasts.
+* **🏆 Scoreboard & Admin Override:** Public sports scoreboard powered by an API backend with a dedicated admin management interface for manual game score updates, clock control, and status overrides.
+* **📊 Student Polls & Admin Portal:** Interactive student voting platform integrated with Firebase, complete with AdminPollsView for real-time poll creation and vote moderation.
+* **🔔 Push Notifications:** Integrated with OneSignal and YouTube WebHooks (PubSubHubbub) to automatically alert subscribers when a live stream begins.
 
 ---
 
-## Project Setup & Installation
+## 🛠️ Tech Stack
 
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/YourUsername/spartan-news.git](https://github.com/YourUsername/spartan-news.git)
-cd spartan-news
+* **Frontend:** Vue 3 (Composition API / <script setup>), Vue Router, Vite, Tailwind CSS
+* **Backend & Storage:** Firebase (Authentication & Firestore), Cloudflare Workers (spartan-youtube-notifier)
+* **Push Notifications:** OneSignal SDK
+* **Data Sources:** Custom Scoreboard API, YouTube Data API v3
+
+---
+
+## 📁 Repository Structure
+
+Spartan-news/
+├── public/                 # Static assets, logos & favicons
+├── src/
+│   ├── assets/             # Global styles & Tailwind CSS directives
+│   ├── components/         # Reusable UI components (Scoreboard Widgets, Modals)
+│   ├── router/             # Vue Router navigation & route guards
+│   ├── services/           # Service modules (Notifications, Firebase, YouTube API)
+│   ├── views/              # Core Application Views
+│   │   ├── ActiveLiveView.vue    # Active live stream player
+│   │   ├── AdminPollsView.vue   # Admin portal for managing polls & score overrides
+│   │   ├── HomeNewsView.vue      # Daily news feed & embedded player
+│   │   ├── PastLivesView.vue     # Live stream broadcast archives
+│   │   ├── PollsView.vue         # Interactive student voting view
+│   │   ├── ScoreboardView.vue    # Public sports scoreboard
+│   │   └── SubscribeView.vue     # Push notification signup view
+│   ├── App.vue             # Root application wrapper
+│   └── main.js             # Application entry point
+├── capacitor.config.json   # Native mobile build setup
+├── generate-sitemap.mjs    # Dynamic sitemap generator
+├── index.html              # Core HTML document
+├── vite.config.js          # Vite build configuration
+└── package.json            # Project dependencies & scripts
+
+---
+
+## 🔒 Admin Access & Scoreboard API
+
+The platform provides administrative control over live scoreboard data and polls:
+
+* **Scoreboard Control:** Admins can adjust scores, game statuses (SCHEDULED, IN_PROGRESS, FINAL), clocks, and venues manually through API endpoints when automatic feeds are offline.
+* **Poll Management:** Access restricted via Firebase Authentication to create new options, open/close voting, and view raw analytics in AdminPollsView.vue.
+
+---
+
+## ☁️ Backend Architecture: Cloudflare Worker
+
+The system relies on a serverless Cloudflare Worker (noti.router.app.shsnews.live) to handle CORS-free data routing and webhooks:
+
+| Route | Method | Description |
+| :--- | :--- | :--- |
+| /youtube-feed | GET | Proxies YouTube playlist items for @spartannewsdaily8847 & @SpartanNewsLive. |
+| /check-scores | GET | Handles sports schedules and scoreboard overrides. |
+| /youtube-webhook | GET / POST | PubSubHubbub subscription handler that fires OneSignal push alerts when live. |
+
+---
+
+## 📝 License
+
+Developed for Sparta Senior High School. All rights reserved.
