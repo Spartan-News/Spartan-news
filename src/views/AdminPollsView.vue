@@ -254,13 +254,6 @@ import { db, auth } from '../services/firebase.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
 
-// Allowed admin email addresses
-const ALLOWED_ADMINS = [
-  'peytongordon@shsnews.live',
-  'principal@spartaschools.org',
-  'broadcast@spartaschools.org'
-];
-
 const user = ref(null);
 const email = ref('');
 const password = ref('');
@@ -295,25 +288,16 @@ const handleLogin = async () => {
 
   const cleanEmail = email.value.toLowerCase().trim();
 
-  if (!ALLOWED_ADMINS.includes(cleanEmail)) {
-    authError.value = 'Access denied. Email not on admin allowlist.';
-    isLoggingIn.value = false;
-    return;
-  }
-
   try {
+    // Authenticate directly against Firebase Authentication
     await signInWithEmailAndPassword(auth, cleanEmail, password.value);
   } catch (err) {
-    console.error('Firebase Auth Error Code:', err.code);
-    console.error('Firebase Auth Error Message:', err.message);
+    console.error('Login error code:', err.code);
 
-    // Provide detailed error messaging
     if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-      authError.value = 'Incorrect password.';
+      authError.value = 'Incorrect email or password.';
     } else if (err.code === 'auth/user-not-found') {
-      authError.value = 'No account found with this email in Firebase.';
-    } else if (err.code === 'auth/operation-not-allowed') {
-      authError.value = 'Email/Password sign-in is disabled in Firebase Console.';
+      authError.value = 'No admin account found with this email.';
     } else {
       authError.value = `Login failed: ${err.code}`;
     }
