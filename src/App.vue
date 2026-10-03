@@ -33,28 +33,40 @@ onMounted(() => {
     <!-- Royal Blue Navigation Header -->
     <header class="border-b border-blue-900 bg-sparta-blue dark:bg-sparta-darkblue text-white backdrop-blur sticky top-0 z-50 shadow-md">
       <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-3">
-          <img 
-            src="https://yt3.googleusercontent.com/ytc/AIdro_mPFpncvKq3JLkok-3fK49hGC1E8Atfx33UZufJYZX-AB8=s160-c-k-c0x00ffffff-no-rj" 
-            alt="Sparta Senior High School News Live Logo" 
-            class="w-10 h-10 rounded-full border-2 border-white object-cover shadow"
-          />
-          <div>
-            <h1 class="text-xl font-extrabold tracking-wide text-white">
-              Sparta Senior High School News Live
-            </h1>
-            <p class="text-xs text-blue-200 font-medium tracking-wider">
-              SPARTAN NEWS NETWORK • SPARTA, MI
-            </p>
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+          <div class="flex items-center gap-3">
+            <img 
+              src="https://yt3.googleusercontent.com/ytc/AIdro_mPFpncvKq3JLkok-3fK49hGC1E8Atfx33UZufJYZX-AB8=s160-c-k-c0x00ffffff-no-rj" 
+              alt="Sparta Senior High School News Live Logo" 
+              class="w-10 h-10 rounded-full border-2 border-white object-cover shadow"
+            />
+            <div>
+              <h1 class="text-xl font-extrabold tracking-wide text-white">
+                Sparta Senior High School News Live
+              </h1>
+              <p class="text-xs text-blue-200 font-medium tracking-wider">
+                SPARTAN NEWS NETWORK • SPARTA, MI
+              </p>
+            </div>
           </div>
+
+          <!-- Light / Dark Mode Toggle Button (Visible on mobile header) -->
+          <button 
+            @click="toggleTheme" 
+            class="sm:hidden p-2 bg-black/30 dark:bg-black/60 border border-white/20 text-blue-100 hover:text-white rounded-lg transition"
+            :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          >
+            <Sun v-if="isDark" class="w-4 h-4 text-amber-300" />
+            <Moon v-else class="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        <div class="flex items-center gap-3">
-          <!-- Navigation Router Links -->
-          <nav class="flex items-center gap-1.5 bg-black/30 dark:bg-black/60 border border-white/20 p-1.5 rounded-lg">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <!-- Scrollable Navigation Router Links -->
+          <nav class="flex items-center gap-1.5 bg-black/30 dark:bg-black/60 border border-white/20 p-1.5 rounded-lg overflow-x-auto whitespace-nowrap scrollbar-none w-full sm:w-auto">
             <router-link 
               to="/" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
               exact-active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
@@ -63,7 +75,7 @@ onMounted(() => {
 
             <router-link 
               to="/polls" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <Vote class="w-3.5 h-3.5 text-purple-400" /> Polls
@@ -71,7 +83,7 @@ onMounted(() => {
             
             <router-link 
               to="/scoreboard" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <Trophy class="w-3.5 h-3.5 text-amber-400" /> Scores
@@ -79,7 +91,7 @@ onMounted(() => {
 
             <router-link 
               to="/live" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <Radio class="w-3.5 h-3.5 text-red-600" /> Active Stream
@@ -87,7 +99,7 @@ onMounted(() => {
 
             <router-link 
               to="/pastlives" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <History class="w-3.5 h-3.5" /> Past Streams
@@ -95,17 +107,17 @@ onMounted(() => {
 
             <router-link 
               to="/subscribe" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <Mail class="w-3.5 h-3.5 text-emerald-400" /> Subscribe
             </router-link>
           </nav>
 
-          <!-- Light / Dark Mode Toggle Button -->
+          <!-- Light / Dark Mode Toggle Button (Desktop) -->
           <button 
             @click="toggleTheme" 
-            class="p-2 bg-black/30 dark:bg-black/60 border border-white/20 text-blue-100 hover:text-white rounded-lg transition"
+            class="hidden sm:block p-2 bg-black/30 dark:bg-black/60 border border-white/20 text-blue-100 hover:text-white rounded-lg transition shrink-0"
             :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
             <Sun v-if="isDark" class="w-4 h-4 text-amber-300" />
@@ -133,3 +145,14 @@ onMounted(() => {
     </footer>
   </div>
 </template>
+
+<style scoped>
+/* Hides scrollbar visual while keeping touch swipe working on mobile */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
