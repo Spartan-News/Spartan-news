@@ -1,3 +1,15 @@
+import groovy.json.JsonSlurper
+
+// Read version directly from root package.json
+def packageJsonFile = file("../../package.json")
+def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
+
+// Converts semver (e.g. "1.0.1") into an integer versionCode (10001) for Google Play
+def parseVersionCode = { String version ->
+    def parts = version.split('\\.')
+    return (parts[0].toInteger() * 10000) + (parts[1].toInteger() * 100) + parts[2].toInteger()
+}
+
 apply plugin: 'com.android.application'
 
 android {
@@ -7,13 +19,16 @@ android {
         applicationId "com.spartanhigh.news"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        
+        // Auto-synced from package.json
+        versionCode parseVersionCode(packageJson.version)
+        versionName packageJson.version
+        
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
-            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
     buildTypes {
@@ -52,4 +67,3 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
-apply plugin: 'com.google.gms.google-services'
