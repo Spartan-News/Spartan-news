@@ -1,14 +1,24 @@
 <script setup>
-import { onMounted } from 'vue';
-import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Vote } from 'lucide-vue-next';
+import { ref, onMounted } from 'vue';
+import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Vote, User } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
 
 const { isDark, initTheme, toggleTheme } = useTheme();
+const isBrowser = ref(true);
 
 onMounted(() => {
   initTheme();
   initNotifications();
+
+  // Platform check to hide browser-only routes (Subscribe) in mobile apps
+  const isCapacitor = Boolean(window?.Capacitor?.isNativePlatform?.());
+  const isCordova = Boolean(window?.cordova);
+  const isMobileAppUserAgent = /wv|Android.*Version\/[0-9]\.[0-9]/i.test(navigator.userAgent);
+
+  if (isCapacitor || isCordova || isMobileAppUserAgent) {
+    isBrowser.value = false;
+  }
 
   // Load OneSignal Web SDK
   if (!document.getElementById('onesignal-sdk')) {
@@ -50,7 +60,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Light / Dark Mode Toggle Button (Visible on mobile header) -->
+          <!-- Light / Dark Mode Toggle Button (Mobile) -->
           <button 
             @click="toggleTheme" 
             class="sm:hidden p-2 bg-black/30 dark:bg-black/60 border border-white/20 text-blue-100 hover:text-white rounded-lg transition"
@@ -105,12 +115,23 @@ onMounted(() => {
               <History class="w-3.5 h-3.5" /> Past Streams
             </router-link>
 
+            <!-- Subscribe Link: Rendered ONLY in web browser builds -->
             <router-link 
+              v-if="isBrowser"
               to="/subscribe" 
               class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"
             >
               <Mail class="w-3.5 h-3.5 text-emerald-400" /> Subscribe
+            </router-link>
+
+            <!-- Account Link -->
+            <router-link 
+              to="/account" 
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
+              active-class="bg-white text-sparta-blue font-extrabold shadow"
+            >
+              <User class="w-3.5 h-3.5 text-sky-400" /> Account
             </router-link>
           </nav>
 
