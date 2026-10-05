@@ -1,240 +1,309 @@
 <template>
-  <div class="max-w-4xl mx-auto space-y-8">
-    
-    <!-- Admin Login Form (Unauthenticated) -->
-    <div v-if="!user" class="max-w-md mx-auto bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md space-y-4">
-      <div class="text-center space-y-1">
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white">Admin Portal Login</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          Sign in with your staff account to manage Spartan polls.
+  <div class="admin-container max-w-5xl mx-auto px-4 py-8">
+    <!-- Unauthenticated Login / Sign-Up Card -->
+    <div v-if="!user" class="max-w-md mx-auto my-12 p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wide">
+          Admin Login
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Sign in with an authorized account to manage Spartan News polls.
         </p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
-            Email Address
-          </label>
-          <input 
-            v-model="email" 
-            type="email" 
-            required 
-            placeholder="admin@spartaschools.org"
-            class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-[#003366]"
-          />
-        </div>
+      <div v-if="authError" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-xs font-semibold">
+        {{ authError }}
+      </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
-            Password
-          </label>
-          <input 
-            v-model="password" 
-            type="password" 
-            required 
-            placeholder="••••••••"
-            class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-[#003366]"
-          />
-        </div>
-
+      <div class="space-y-4">
+        <!-- Google Sign-In Button -->
         <button 
-          type="submit" 
-          :disabled="isLoggingIn"
-          class="w-full py-2.5 bg-[#003366] hover:bg-[#002244] text-white font-bold text-xs rounded-lg shadow transition disabled:opacity-50"
+          type="button" 
+          @click="handleGoogleSignIn"
+          class="w-full py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
-          {{ isLoggingIn ? 'Authenticating...' : 'Sign In' }}
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Sign In with Google
         </button>
 
-        <p v-if="authError" class="text-xs text-red-500 font-semibold text-center mt-2">
-          {{ authError }}
-        </p>
-      </form>
+        <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+          <span class="flex-shrink mx-4 text-[10px] font-black uppercase tracking-wider text-slate-400">Or continue with email</span>
+          <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+        </div>
+
+        <!-- Email & Password Form -->
+        <form @submit.prevent="handleAuth" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Email Address
+            </label>
+            <input 
+              v-model="authEmail"
+              type="email" 
+              placeholder="admin@shsnews.live"
+              class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Password
+            </label>
+            <input 
+              v-model="authPassword"
+              type="password" 
+              placeholder="••••••••"
+              class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button 
+              type="submit" 
+              :disabled="authLoading"
+              class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {{ isSignUp ? 'Sign Up New Admin' : 'Sign In' }}
+            </button>
+          </div>
+
+          <div class="text-center pt-2">
+            <button 
+              type="button" 
+              @click="isSignUp = !isSignUp; authError = ''"
+              class="text-xs text-slate-500 hover:text-blue-500 underline cursor-pointer"
+            >
+              {{ isSignUp ? 'Already have an account? Sign In' : 'Need to register an admin account? Sign Up' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Authenticated Admin Dashboard -->
-    <div v-else class="space-y-8">
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 dark:border-slate-700 pb-4 gap-4">
+    <div v-else>
+      <!-- Dashboard Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
-          <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
-            Admin Poll Manager
-          </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            Authenticated as: <span class="font-semibold text-slate-700 dark:text-slate-300">{{ user.email }}</span>
+          <div class="flex items-center gap-2">
+            <h1 class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-wide">
+              Admin Poll Manager
+            </h1>
+            <span v-if="isApproved" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md border border-emerald-500/30">
+              Approved Admin
+            </span>
+            <span v-else class="px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-md border border-amber-500/30">
+              Pending Approval
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Logged in as <span class="text-blue-500 font-semibold">{{ user.email }}</span>
           </p>
         </div>
 
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <button 
-            @click="showCreateModal = true"
-            class="flex-1 sm:flex-initial px-4 py-2 bg-[#003366] hover:bg-[#002244] text-white font-bold text-xs rounded-lg shadow flex items-center justify-center gap-1.5 transition"
+        <div class="flex items-center gap-3">
+          <router-link 
+            v-if="isOwner"
+            to="/admin/users"
+            class="px-4 py-2 bg-purple-600/20 border border-purple-500/30 text-purple-600 dark:text-purple-300 font-bold text-xs rounded-xl hover:bg-purple-600/30 transition flex items-center gap-1.5"
           >
-            <Plus class="w-4 h-4" /> Create Poll
-          </button>
+            <span>⚙️</span> Manage Users
+          </router-link>
+
           <button 
-            @click="handleLogout"
-            class="px-3 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold rounded-lg transition"
+            v-if="isApproved"
+            @click="showCreateModal = true"
+            class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg transition-colors flex items-center gap-2 text-sm cursor-pointer"
+          >
+            <span>+</span> Create New Poll
+          </button>
+
+          <button 
+            @click="handleSignOut"
+            class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2.5 px-4 rounded-xl text-xs transition-colors cursor-pointer"
           >
             Sign Out
           </button>
         </div>
       </div>
 
-      <!-- Existing Polls List -->
-      <div class="space-y-4">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <ListFilter class="w-5 h-5 text-[#003366] dark:text-blue-400" /> All Managed Polls
-        </h2>
+      <!-- Pending Approval Banner -->
+      <div v-if="!isApproved" class="mb-8 p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-300 space-y-2">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <span>⚠️</span> Account Access Pending Approval
+        </h3>
+        <p class="text-xs leading-relaxed">
+          Your admin account has been created, but must be approved by the site owner before you can create, toggle, or delete polls.
+        </p>
+      </div>
 
-        <div v-if="polls.length === 0" class="bg-white dark:bg-slate-800 rounded-xl p-8 text-center border border-slate-200 dark:border-slate-700 shadow-sm text-slate-500 dark:text-slate-400 text-sm">
-          No polls found in Firestore. Click <strong>Create Poll</strong> to add your first question!
-        </div>
+      <!-- Status Alerts -->
+      <div v-if="statusMessage.text" :class="[
+        'mb-6 p-4 rounded-xl border text-sm font-semibold flex justify-between items-center',
+        statusMessage.isError 
+          ? 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400' 
+          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+      ]">
+        <span>{{ statusMessage.text }}</span>
+        <button @click="statusMessage.text = ''" class="text-xs opacity-70 hover:opacity-100 cursor-pointer">Dismiss</button>
+      </div>
 
-        <div v-else class="grid gap-4">
-          <div 
-            v-for="poll in polls" 
-            :key="poll.id"
-            class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-          >
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span 
-                  :class="poll.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'"
-                  class="px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-full"
-                >
-                  {{ poll.isActive ? 'Active Now' : 'Inactive' }}
-                </span>
-                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Type: {{ poll.type === 'google_form' ? 'Google Form' : 'Native Web Poll' }}
-                </span>
-              </div>
+      <!-- Loading Skeleton -->
+      <div v-if="isLoading" class="space-y-4">
+        <div v-for="n in 3" :key="n" class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse h-28"></div>
+      </div>
 
-              <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base">
-                {{ poll.question }}
-              </h3>
-
-              <p v-if="poll.type === 'google_form'" class="text-xs text-blue-600 dark:text-blue-400 truncate max-w-md">
-                🔗 {{ poll.googleFormUrl }}
-              </p>
-              
-              <p v-else class="text-xs text-slate-500 dark:text-slate-400">
-                Options: {{ poll.options ? poll.options.map(o => o.label).join(', ') : 'None' }}
-              </p>
+      <!-- Managed Polls List -->
+      <div v-else-if="polls.length > 0" class="space-y-4">
+        <div 
+          v-for="poll in polls" 
+          :key="poll.id"
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all flex flex-col md:flex-row justify-between md:items-center gap-6"
+        >
+          <div class="space-y-2 flex-1">
+            <div class="flex items-center gap-3">
+              <span :class="[
+                'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                poll.active 
+                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-slate-500/20 text-slate-500 border border-slate-500/30'
+              ]">
+                {{ poll.active ? 'Active' : 'Inactive' }}
+              </span>
+              <span class="text-xs text-slate-400 font-mono">ID: {{ poll.id }}</span>
             </div>
 
-            <div class="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
-              <button 
-                @click="toggleActive(poll)"
-                class="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-              >
-                {{ poll.isActive ? 'Deactivate' : 'Set Active' }}
-              </button>
-              <button 
-                @click="deletePoll(poll.id)"
-                class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition"
-                title="Delete Poll"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">
+              {{ poll.title }}
+            </h2>
+
+            <div class="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span v-for="(opt, idx) in poll.options" :key="idx" class="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+                {{ opt.text }} ({{ opt.votes || 0 }})
+              </span>
             </div>
+          </div>
+
+          <!-- Action Controls -->
+          <div v-if="isApproved" class="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-slate-200 dark:border-slate-800 shrink-0">
+            <button 
+              @click="togglePollActive(poll)"
+              :class="[
+                'px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer',
+                poll.active 
+                  ? 'bg-amber-600/20 text-amber-600 dark:text-amber-400 hover:bg-amber-600/30 border border-amber-600/30' 
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'
+              ]"
+            >
+              {{ poll.active ? 'Deactivate' : 'Set Active' }}
+            </button>
+
+            <button 
+              @click="deletePoll(poll.id)"
+              class="px-3 py-2 bg-red-600/10 hover:bg-red-600 text-red-600 hover:text-white rounded-xl text-xs font-bold transition-colors border border-red-600/20 cursor-pointer"
+              title="Delete Poll"
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
 
+      <!-- Empty State -->
+      <div v-else class="text-center py-12 bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <p class="text-slate-500 dark:text-slate-400">No polls created yet. Click "+ Create New Poll" to create your first poll.</p>
+      </div>
+
       <!-- Create Poll Modal -->
-      <div v-if="showCreateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full p-6 space-y-6">
-          <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Create New Poll</h3>
-            <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-              <X class="w-5 h-5" />
-            </button>
+      <div v-if="showCreateModal && isApproved" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6">
+          <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Create New Student Poll</h3>
+            <button @click="showCreateModal = false" class="text-slate-400 hover:text-white text-xl cursor-pointer">✕</button>
           </div>
 
           <form @submit.prevent="createPoll" class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                 Poll Question / Title
               </label>
               <input 
-                v-model="newPoll.question" 
+                v-model="newPoll.title"
                 type="text" 
-                required 
-                placeholder="e.g., What Spirit Theme should we do for Friday?"
-                class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-[#003366]"
+                placeholder="e.g. What theme should Friday's game be?"
+                class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                required
               />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
-                Poll Type
-              </label>
-              <select 
-                v-model="newPoll.type" 
-                class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm outline-none"
-              >
-                <option value="native">Native Web Poll (Vote Directly)</option>
-                <option value="google_form">Google Form / External Link</option>
-              </select>
-            </div>
-
-            <!-- External Link Field -->
-            <div v-if="newPoll.type === 'google_form'">
-              <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">
-                Google Form Link
-              </label>
-              <input 
-                v-model="newPoll.googleFormUrl" 
-                type="url" 
-                required 
-                placeholder="https://docs.google.com/forms/d/e/..."
-                class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-[#003366]"
-              />
-            </div>
-
-            <!-- Native Poll Options Field -->
-            <div v-else class="space-y-2">
-              <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                 Poll Options
               </label>
-              <div v-for="(opt, idx) in newPoll.options" :key="idx" class="flex items-center gap-2">
-                <input 
-                  v-model="newPoll.options[idx]" 
-                  type="text" 
-                  required 
-                  :placeholder="`Option ${idx + 1}`"
-                  class="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs outline-none"
-                />
-                <button 
-                  type="button" 
-                  @click="removeOption(idx)" 
-                  v-if="newPoll.options.length > 2"
-                  class="text-red-500 hover:text-red-700"
+              <div class="space-y-2">
+                <div 
+                  v-for="(option, index) in newPoll.options" 
+                  :key="index"
+                  class="flex items-center gap-2"
                 >
-                  <X class="w-4 h-4" />
-                </button>
+                  <input 
+                    v-model="newPoll.options[index]"
+                    type="text" 
+                    :placeholder="`Option ${index + 1}`"
+                    class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    required
+                  />
+                  <button 
+                    v-if="newPoll.options.length > 2"
+                    type="button" 
+                    @click="removeOption(index)"
+                    class="p-2 text-red-500 hover:text-red-400 text-sm font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
+
               <button 
                 type="button" 
-                @click="addOption" 
-                class="text-xs text-[#003366] dark:text-blue-400 font-bold hover:underline"
+                @click="addOption"
+                class="mt-3 text-xs font-bold text-blue-500 hover:underline cursor-pointer"
               >
                 + Add Option
               </button>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2 pt-2">
+              <input 
+                v-model="newPoll.setActive"
+                type="checkbox" 
+                id="setActive"
+                class="rounded text-blue-600 focus:ring-0 cursor-pointer"
+              />
+              <label for="setActive" class="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                Set as active poll immediately
+              </label>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
               <button 
-                type="button" 
+                type="button"
                 @click="showCreateModal = false"
-                class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
               >
                 Cancel
               </button>
               <button 
-                type="submit" 
-                class="px-4 py-2 text-xs font-bold bg-[#003366] text-white rounded-lg shadow hover:bg-[#002244]"
+                type="submit"
+                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow transition-colors cursor-pointer"
               >
                 Save Poll
               </button>
@@ -242,123 +311,242 @@
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Plus, ListFilter, Trash2, X } from 'lucide-vue-next';
-import { db, auth } from '../services/firebase.js';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
+import { ref, onMounted } from 'vue'
+import { supabase } from '../services/supabase'
 
-const user = ref(null);
-const email = ref('');
-const password = ref('');
-const isLoggingIn = ref(false);
-const authError = ref('');
+// Auth & Access State
+const user = ref(null)
+const isApproved = ref(false)
+const isOwner = ref(false)
 
-const showCreateModal = ref(false);
-const polls = ref([]);
-let unsubscribePolls = null;
+const authEmail = ref('')
+const authPassword = ref('')
+const authLoading = ref(false)
+const authError = ref('')
+const isSignUp = ref(false)
+
+// Dashboard State
+const polls = ref([])
+const isLoading = ref(true)
+const showCreateModal = ref(false)
+const statusMessage = ref({ text: '', isError: false })
 
 const newPoll = ref({
-  question: '',
-  type: 'native',
-  googleFormUrl: '',
-  options: ['', '']
-});
+  title: '',
+  options: ['', ''],
+  setActive: true
+})
 
-onMounted(() => {
-  onAuthStateChanged(auth, (currentUser) => {
-    user.value = currentUser;
-    if (currentUser) {
-      listenToPolls();
-    } else if (unsubscribePolls) {
-      unsubscribePolls();
+onMounted(async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  user.value = session?.user || null
+
+  if (user.value) {
+    await checkUserProfile(user.value.id)
+    await fetchAllPolls()
+  } else {
+    isLoading.value = false
+  }
+
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    user.value = session?.user || null
+    if (user.value) {
+      await checkUserProfile(user.value.id)
+      await fetchAllPolls()
+    } else {
+      polls.value = []
+      isApproved.value = false
+      isOwner.value = false
     }
-  });
-});
+  })
+})
 
-const handleLogin = async () => {
-  isLoggingIn.value = true;
-  authError.value = '';
+async function checkUserProfile(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_approved, is_owner')
+      .eq('id', userId)
+      .single()
 
-  const cleanEmail = email.value.toLowerCase().trim();
+    if (error) throw error
+
+    if (data) {
+      isApproved.value = Boolean(data.is_approved)
+      isOwner.value = Boolean(data.is_owner)
+    }
+  } catch (err) {
+    console.error('Error fetching user profile:', err)
+  }
+}
+
+async function handleGoogleSignIn() {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/admin/polls`
+      }
+    })
+    if (error) throw error
+  } catch (err) {
+    console.error('Google Sign-In Error:', err)
+    authError.value = err.message || 'Failed to initialize Google authentication.'
+  }
+}
+
+async function handleAuth() {
+  authLoading.value = true
+  authError.value = ''
 
   try {
-    // Authenticate directly against Firebase Authentication
-    await signInWithEmailAndPassword(auth, cleanEmail, password.value);
-  } catch (err) {
-    console.error('Login error code:', err.code);
-
-    if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-      authError.value = 'Incorrect email or password.';
-    } else if (err.code === 'auth/user-not-found') {
-      authError.value = 'No admin account found with this email.';
+    if (isSignUp.value) {
+      const { data, error } = await supabase.auth.signUp({
+        email: authEmail.value,
+        password: authPassword.value
+      })
+      if (error) throw error
+      
+      if (data.user) {
+        user.value = data.user
+        await checkUserProfile(data.user.id)
+        showMessage('Account created successfully! Awaiting owner activation.')
+      }
     } else {
-      authError.value = `Login failed: ${err.code}`;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: authEmail.value,
+        password: authPassword.value
+      })
+      if (error) throw error
+      
+      user.value = data.user
+      await checkUserProfile(data.user.id)
     }
+  } catch (err) {
+    console.error('Auth error:', err)
+    authError.value = err.message || 'Authentication failed.'
   } finally {
-    isLoggingIn.value = false;
+    authLoading.value = false
   }
-};
+}
 
-const handleLogout = () => signOut(auth);
+async function handleSignOut() {
+  await supabase.auth.signOut()
+  user.value = null
+  isApproved.value = false
+  isOwner.value = false
+  polls.value = []
+}
 
-const listenToPolls = () => {
-  unsubscribePolls = onSnapshot(collection(db, 'polls'), (snapshot) => {
-    polls.value = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  });
-};
+async function fetchAllPolls() {
+  isLoading.value = true
+  try {
+    const { data, error } = await supabase
+      .from('polls')
+      .select('*')
+      .order('id', { ascending: false })
 
-const addOption = () => newPoll.value.options.push('');
-const removeOption = (idx) => newPoll.value.options.splice(idx, 1);
+    if (error) throw error
+    polls.value = data || []
+  } catch (err) {
+    console.error('Fetch Error:', err)
+    showMessage('Failed to load polls from Supabase.', true)
+  } finally {
+    isLoading.value = false
+  }
+}
 
-const createPoll = async () => {
-  const formattedOptions = newPoll.value.type === 'native' 
-    ? newPoll.value.options.filter(opt => opt.trim() !== '').map(opt => ({ label: opt, votes: 0 }))
-    : [];
+function addOption() {
+  newPoll.value.options.push('')
+}
 
-  await addDoc(collection(db, 'polls'), {
-    question: newPoll.value.question,
-    type: newPoll.value.type,
-    googleFormUrl: newPoll.value.googleFormUrl || '',
-    isActive: false,
-    options: formattedOptions,
-    createdAt: new Date()
-  });
+function removeOption(index) {
+  newPoll.value.options.splice(index, 1)
+}
 
-  showCreateModal.value = false;
-  newPoll.value = { question: '', type: 'native', googleFormUrl: '', options: ['', ''] };
-};
-
-const toggleActive = async (targetPoll) => {
-  const batch = writeBatch(db);
-  
-  // Deactivate all existing polls
-  const snapshot = await getDocs(collection(db, 'polls'));
-  snapshot.forEach((d) => {
-    batch.update(doc(db, 'polls', d.id), { isActive: false });
-  });
-
-  // Toggle active state for the selected poll
-  if (!targetPoll.isActive) {
-    batch.update(doc(db, 'polls', targetPoll.id), { isActive: true });
+async function createPoll() {
+  if (!isApproved.value) {
+    alert('Your account is awaiting owner activation before you can create polls.')
+    return
   }
 
-  await batch.commit();
-};
+  try {
+    const formattedOptions = newPoll.value.options
+      .filter(opt => opt.trim() !== '')
+      .map(opt => ({ text: opt.trim(), votes: 0 }))
 
-const deletePoll = async (id) => {
-  if (confirm('Are you sure you want to delete this poll?')) {
-    await deleteDoc(doc(db, 'polls', id));
+    if (formattedOptions.length < 2) {
+      alert('Please provide at least two poll options.')
+      return
+    }
+
+    const { error } = await supabase
+      .from('polls')
+      .insert({
+        title: newPoll.value.title.trim(),
+        options: formattedOptions,
+        active: newPoll.value.setActive,
+        total_votes: 0
+      })
+
+    if (error) throw error
+
+    showMessage('Poll created successfully!')
+    showCreateModal.value = false
+    
+    newPoll.value = { title: '', options: ['', ''], setActive: true }
+    await fetchAllPolls()
+  } catch (err) {
+    console.error('Create Poll Error:', err)
+    showMessage('Failed to create poll. Check database permissions.', true)
   }
-};
+}
 
-onUnmounted(() => {
-  if (unsubscribePolls) unsubscribePolls();
-});
+async function togglePollActive(poll) {
+  if (!isApproved.value) return
+
+  try {
+    const { error } = await supabase
+      .from('polls')
+      .update({ active: !poll.active })
+      .eq('id', poll.id)
+
+    if (error) throw error
+
+    poll.active = !poll.active
+    showMessage(`Poll set to ${poll.active ? 'Active' : 'Inactive'}.`)
+  } catch (err) {
+    console.error('Update Error:', err)
+    showMessage('Failed to update poll state.', true)
+  }
+}
+
+async function deletePoll(pollId) {
+  if (!isApproved.value) return
+  if (!confirm('Are you sure you want to delete this poll?')) return
+
+  try {
+    const { error } = await supabase
+      .from('polls')
+      .delete()
+      .eq('id', pollId)
+
+    if (error) throw error
+
+    polls.value = polls.value.filter(p => p.id !== pollId)
+    showMessage('Poll deleted successfully.')
+  } catch (err) {
+    console.error('Delete Error:', err)
+    showMessage('Failed to delete poll.', true)
+  }
+}
+
+function showMessage(msg, isError = false) {
+  statusMessage.value = { text: msg, isError }
+}
 </script>

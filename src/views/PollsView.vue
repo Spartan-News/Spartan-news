@@ -1,166 +1,184 @@
 <template>
-  <div class="space-y-8 max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="text-center space-y-2">
-      <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
-        Spartan Student Voice & Polls
+  <div class="polls-container max-w-4xl mx-auto px-4 py-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        Student Polls
       </h1>
-      <p class="text-slate-600 dark:text-slate-400 text-sm">
-        Vote on active questions and see real-time community results!
+      <p class="text-slate-600 dark:text-slate-400 mt-1">
+        Voice your opinion on upcoming Spartan events, themes, and school activities.
       </p>
+    </header>
+
+    <!-- Error Alert -->
+    <div v-if="errorMessage" class="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-sm">
+      {{ errorMessage }}
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="text-center py-12 text-slate-500 dark:text-slate-400">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#003366] border-t-transparent mb-2"></div>
-      <p class="text-sm font-semibold">Loading current poll...</p>
-    </div>
-
-    <!-- No Active Poll -->
-    <div v-else-if="!activePoll" class="bg-white dark:bg-slate-800 rounded-xl p-8 text-center border border-slate-200 dark:border-slate-700 shadow-sm">
-      <p class="text-slate-600 dark:text-slate-300 font-semibold">There are no active polls right now.</p>
-      <p class="text-xs text-slate-400 mt-1">Check back later for new Spartan community questions!</p>
-    </div>
-
-    <!-- Active Poll Container -->
-    <div v-else class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-      
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
-        <span class="px-3 py-1 bg-[#003366] text-white text-xs font-bold uppercase rounded-full tracking-wider">
-          Active Poll
-        </span>
-        <span v-if="activePoll.type === 'native'" class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Total Votes: {{ totalVotes }}
-        </span>
+    <!-- Loading State Skeleton -->
+    <div v-if="isLoading" class="space-y-6">
+      <div v-for="n in 2" :key="n" class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-4">
+        <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+        <div class="space-y-2">
+          <div class="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+          <div class="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+        </div>
       </div>
+    </div>
 
-      <div>
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white">
-          {{ activePoll.question }}
+    <!-- Active Polls List -->
+    <div v-else-if="polls.length > 0" class="space-y-6">
+      <div 
+        v-for="poll in polls" 
+        :key="poll.id"
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-all"
+      >
+        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+          {{ poll.title }}
         </h2>
-      </div>
 
-      <!-- TYPE 1: GOOGLE FORM EMBED -->
-      <div v-if="activePoll.type === 'google_form'" class="space-y-4">
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          This poll is hosted via Google Forms. Complete the form below or open it directly in a new window.
-        </p>
-        
-        <iframe 
-          :src="activePoll.googleFormUrl" 
-          class="w-full h-[600px] border-0 rounded-lg bg-white"
-          loading="lazy"
-        ></iframe>
-
-        <div class="text-center pt-2">
-          <a 
-            :href="activePoll.googleFormUrl" 
-            target="_blank" 
-            class="text-xs font-bold text-[#003366] dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+        <div class="space-y-3">
+          <div 
+            v-for="(option, index) in poll.options" 
+            :key="index"
+            class="relative overflow-hidden rounded-xl border transition-all"
+            :class="[
+              hasVoted(poll.id)
+                ? 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40' 
+                : 'border-slate-300 dark:border-slate-700 hover:border-sparta-blue dark:hover:border-blue-500 bg-slate-50 dark:bg-slate-800/60 cursor-pointer'
+            ]"
+            @click="!hasVoted(poll.id) && castVote(poll, index)"
           >
-            Open in Google Forms Direct Window &rarr;
-          </a>
-        </div>
-      </div>
-
-      <!-- TYPE 2: NATIVE VOTING -->
-      <div v-else-if="!hasVoted" class="space-y-3">
-        <button
-          v-for="(option, index) in activePoll.options"
-          :key="index"
-          @click="submitVote(index)"
-          :disabled="isSubmitting"
-          class="w-full text-left px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-[#003366] dark:hover:border-blue-400 transition font-semibold text-slate-800 dark:text-slate-100 flex justify-between items-center group disabled:opacity-50"
-        >
-          <span>{{ option.label }}</span>
-          <Vote class="w-4 h-4 opacity-0 group-hover:opacity-100 text-[#003366] dark:text-blue-400 transition" />
-        </button>
-      </div>
-
-      <!-- Live Results -->
-      <div v-else class="space-y-4">
-        <div v-for="(option, index) in activePoll.options" :key="index" class="space-y-1">
-          <div class="flex justify-between text-sm font-semibold text-slate-800 dark:text-slate-200">
-            <span>{{ option.label }}</span>
-            <span>{{ getPercentage(option.votes) }}% ({{ option.votes }})</span>
-          </div>
-          <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-            <div
-              class="bg-[#003366] dark:bg-blue-500 h-3 rounded-full transition-all duration-500"
-              :style="{ width: getPercentage(option.votes) + '%' }"
+            <!-- Progress Fill Bar after voting -->
+            <div 
+              v-if="hasVoted(poll.id)"
+              class="absolute inset-y-0 left-0 bg-blue-500/20 dark:bg-blue-600/30 transition-all duration-500"
+              :style="{ width: getPercentage(poll, option.votes) + '%' }"
             ></div>
+
+            <div class="relative z-10 p-4 flex justify-between items-center text-sm font-semibold">
+              <span class="text-slate-800 dark:text-slate-200">{{ option.text }}</span>
+              
+              <!-- Vote percentage count displayed if already voted -->
+              <div v-if="hasVoted(poll.id)" class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 dark:text-slate-400">
+                  ({{ option.votes || 0 }} votes)
+                </span>
+                <span class="text-sparta-blue dark:text-blue-400 font-bold">
+                  {{ getPercentage(poll, option.votes) }}%
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <p class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold text-center pt-2">
-          ✓ Your vote has been recorded!
-        </p>
+        <!-- Poll Footer Details -->
+        <div class="mt-4 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+          <span>Total Votes: {{ poll.total_votes || 0 }}</span>
+          <span v-if="hasVoted(poll.id)" class="text-emerald-600 dark:text-emerald-400 font-semibold">
+            ✓ Vote Recorded
+          </span>
+        </div>
       </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="text-center py-12 bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <p class="text-slate-500 dark:text-slate-400">No active student polls at this time.</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue';
-import { Vote } from 'lucide-vue-next';
-import { db } from '../services/firebase.js';
-import { collection, query, where, onSnapshot, doc, updateDoc, increment } from 'firebase/firestore';
+import { ref, onMounted } from 'vue'
+import { supabase } from '../services/supabase'
 
-const activePoll = ref(null);
-const isLoading = ref(true);
-const isSubmitting = ref(false);
-const hasVoted = ref(false);
-let unsubscribe = null;
+const polls = ref([])
+const isLoading = ref(true)
+const errorMessage = ref('')
+const votedPolls = ref({})
 
-const totalVotes = computed(() => {
-  if (!activePoll.value || !activePoll.value.options) return 0;
-  return activePoll.value.options.reduce((sum, opt) => sum + opt.votes, 0);
-});
+onMounted(async () => {
+  loadVotedState()
+  await fetchPolls()
+})
 
-const getPercentage = (votes) => {
-  if (totalVotes.value === 0) return 0;
-  return Math.round((votes / totalVotes.value) * 100);
-};
-
-const submitVote = async (index) => {
-  if (!activePoll.value || isSubmitting.value) return;
-
-  isSubmitting.value = true;
-  try {
-    const pollRef = doc(db, 'polls', activePoll.value.id);
-    const updatedOptions = [...activePoll.value.options];
-    updatedOptions[index].votes += 1;
-
-    await updateDoc(pollRef, {
-      options: updatedOptions
-    });
-
-    hasVoted.value = true;
-    localStorage.setItem(`voted_${activePoll.value.id}`, 'true');
-  } catch (err) {
-    console.error('Error submitting vote:', err);
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-// Listen to Firestore active poll in real time
-const q = query(collection(db, 'polls'), where('isActive', '==', true));
-unsubscribe = onSnapshot(q, (snapshot) => {
-  if (!snapshot.empty) {
-    const docData = snapshot.docs[0];
-    activePoll.value = { id: docData.id, ...docData.data() };
-
-    if (localStorage.getItem(`voted_${activePoll.value.id}`)) {
-      hasVoted.value = true;
+function loadVotedState() {
+  const saved = localStorage.getItem('shs_voted_polls')
+  if (saved) {
+    try {
+      votedPolls.value = JSON.parse(saved)
+    } catch (e) {
+      votedPolls.value = {}
     }
-  } else {
-    activePoll.value = null;
   }
-  isLoading.value = false;
-});
+}
 
-onUnmounted(() => {
-  if (unsubscribe) unsubscribe();
-});
+function hasVoted(pollId) {
+  return Boolean(votedPolls.value[pollId])
+}
+
+async function fetchPolls() {
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    const { data, error } = await supabase
+      .from('polls')
+      .select('*')
+      .eq('active', true)
+
+    if (error) throw error
+
+    polls.value = data || []
+  } catch (err) {
+    console.error('Supabase Fetch Error:', err)
+    errorMessage.value = 'Unable to load active polls. Please check connection.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function castVote(poll, optionIndex) {
+  if (hasVoted(poll.id)) return
+
+  try {
+    // Increment option votes locally
+    const updatedOptions = poll.options.map((opt, idx) => {
+      if (idx === optionIndex) {
+        return { ...opt, votes: (opt.votes || 0) + 1 }
+      }
+      return opt
+    })
+
+    const newTotal = (poll.total_votes || 0) + 1
+
+    // Update in Supabase
+    const { error } = await supabase
+      .from('polls')
+      .update({
+        options: updatedOptions,
+        total_votes: newTotal
+      })
+      .eq('id', poll.id)
+
+    if (error) throw error
+
+    // Update state
+    poll.options = updatedOptions
+    poll.total_votes = newTotal
+
+    // Save voted status
+    votedPolls.value[poll.id] = true
+    localStorage.setItem('shs_voted_polls', JSON.stringify(votedPolls.value))
+
+  } catch (err) {
+    console.error('Supabase Write Error:', err)
+    alert('Failed to record vote. Please try again.')
+  }
+}
+
+function getPercentage(poll, votes) {
+  if (!poll.total_votes || poll.total_votes === 0) return 0
+  return Math.round(((votes || 0) / poll.total_votes) * 100)
+}
 </script>

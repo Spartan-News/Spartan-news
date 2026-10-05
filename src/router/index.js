@@ -6,6 +6,8 @@ import ScoreboardView from '../views/ScoreboardView.vue';
 import SubscribeView from '../views/SubscribeView.vue';
 import PollsView from '../views/PollsView.vue';
 import AdminPollsView from '../views/AdminPollsView.vue';
+import AdminUsersView from '../views/AdminUsersView.vue';
+import AccountView from '../views/AccountView.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: HomeNewsView },
@@ -15,6 +17,8 @@ const routes = [
   { path: '/subscribe', name: 'Subscribe', component: SubscribeView },
   { path: '/polls', name: 'Polls', component: PollsView },
   { path: '/admin/polls', name: 'AdminPolls', component: AdminPollsView },
+  { path: '/admin/users', name: 'AdminUsers', component: AdminUsersView },
+  { path: '/account', name: 'Account', component: AccountView },
 ];
 
 const router = createRouter({
