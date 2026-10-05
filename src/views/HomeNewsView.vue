@@ -112,7 +112,7 @@ const errorMessage = ref('')
 const isLiveNow = ref(false)
 const activeVideo = ref(null)
 
-const API_BASE_URL = 'https://spartan-youtube-notifier.lsg1.workers.dev'
+const API_BASE_URL = import.meta.env.VITE_WORKER_URL || 'https://noti.router.app.shsnews.live'
 
 onMounted(async () => {
   await fetchVideos()
