@@ -7,6 +7,7 @@ import SubscribeView from '../views/SubscribeView.vue'
 import PollsView from '../views/PollsView.vue'
 import AdminPollsView from '../views/AdminPollsView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
+import AdminScheduleView from '../views/AdminScheduleView.vue'
 import AccountView from '../views/AccountView.vue'
 
 const routes = [
@@ -21,7 +22,7 @@ const routes = [
     beforeEnter: (to, from, next) => {
       // Check for native mobile app platform flags
       const isNativeApp = Boolean(
-        window?.Capacitor?.isNativePlatform() || 
+        window?.Capacitor?.isNativePlatform?.() || 
         window?.cordova || 
         /wv|Android.*Version\/[0-9]\.[0-9]/i.test(navigator.userAgent)
       )
@@ -37,6 +38,7 @@ const routes = [
   { path: '/polls', name: 'Polls', component: PollsView },
   { path: '/admin/polls', name: 'AdminPolls', component: AdminPollsView },
   { path: '/admin/users', name: 'AdminUsers', component: AdminUsersView },
+  { path: '/admin/schedule', name: 'AdminSchedule', component: AdminScheduleView },
   { path: '/account', name: 'Account', component: AccountView },
 ]
 

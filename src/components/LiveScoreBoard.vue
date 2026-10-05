@@ -1,12 +1,25 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
-import { Trophy, Activity, MapPin, User, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-vue-next';
-import { startGameLiveActivity } from '../services/notifications.js';
+import { Trophy, Activity, MapPin, User, Calendar, Clock, ChevronLeft, ChevronRight, Bell } from 'lucide-vue-next';
+import {
+  canPinToLockScreen,
+  getPinnedIds,
+  forgetPin,
+  pinGameToLockScreen,
+  unpinGame,
+  getScoreAlertsEnabled,
+  setScoreAlerts,
+} from '../services/notifications.js';
 
 const games = ref([]);
 const activeGameIndex = ref(0);
 const filterCategory = ref('all');
-const isSubscribed = ref(false);
+const pinnedIds = ref(getPinnedIds());
+const pinBusy = ref(false);
+const pinError = ref('');
+const alertsOn = ref(getScoreAlertsEnabled());
+const alertsBusy = ref(false);
+const alertsMsg = ref('');
 
 // Scroll indicator states & refs
 const tabsContainer = ref(null);
@@ -17,11 +30,12 @@ let pollInterval = null;
 
 const fetchHudlScores = async () => {
   try {
-    const res = await fetch("https://noti.router.app.shsnews.live/check-scores");
+    const res = await fetch("https://spartan-youtube-notifier.lsg1.workers.dev/check-scores");
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.games)) {
         games.value = data.games;
+        prunePins();
         await nextTick();
         checkScrollOverflow();
       }
@@ -45,25 +59,71 @@ const scrollTabs = (direction) => {
 };
 
 const filteredGames = computed(() => {
-  if (filterCategory.value === 'live') return games.value.filter(g => g.isLive);
-  if (filterCategory.value === 'upcoming') return games.value.filter(g => g.isFuture);
-  if (filterCategory.value === 'final') return games.value.filter(g => g.status === 'FINAL');
-  return games.value;
+  let list = games.value;
+  if (filterCategory.value === 'live') list = list.filter(g => g.isLive);
+  else if (filterCategory.value === 'upcoming') list = list.filter(g => g.isFuture);
+  else if (filterCategory.value === 'final') list = list.filter(g => g.status === 'FINAL');
+  // Pinned games float to the top (sort is stable, so the rest keep their order).
+  return [...list].sort((a, b) => Number(pinnedIds.value.includes(b.id)) - Number(pinnedIds.value.includes(a.id)));
 });
 
 const currentGame = computed(() => {
   return filteredGames.value[activeGameIndex.value] || null;
 });
 
-const subscribeToLiveScore = async () => {
-  if (!currentGame.value || !currentGame.value.isLive) return;
-  isSubscribed.value = true;
-  await startGameLiveActivity(
-    `sparta_${currentGame.value.id}`, 
-    currentGame.value.homeTeam.score, 
-    currentGame.value.awayTeam.score, 
-    currentGame.value.gameClock
-  );
+const isPinned = computed(() => !!currentGame.value && pinnedIds.value.includes(currentGame.value.id));
+
+const pinLabel = computed(() => {
+  const g = currentGame.value;
+  if (!g) return '';
+  if (pinBusy.value) return 'Working...';
+  if (isPinned.value) return '✓ Pinned to Lock Screen (tap to stop)';
+  if (g.isLive) return 'Pin Live Score to Lock Screen';
+  return g.isFuture ? 'Live Pin Available at Gametime' : 'Game Completed';
+});
+
+// A pinned game that has finished (or been removed) is over on the lock screen too.
+const prunePins = () => {
+  for (const id of getPinnedIds()) {
+    const g = games.value.find(x => x.id === id);
+    if (!g || g.status === 'FINAL') forgetPin(id);
+  }
+  pinnedIds.value = getPinnedIds();
+};
+
+const togglePin = async () => {
+  const game = currentGame.value;
+  if (!game || pinBusy.value) return;
+  pinBusy.value = true;
+  pinError.value = '';
+  try {
+    if (isPinned.value) await unpinGame(game);
+    else await pinGameToLockScreen(game);
+    pinnedIds.value = getPinnedIds();
+    // Pinned games move to the top, so keep the same game on screen.
+    const idx = filteredGames.value.findIndex(g => g.id === game.id);
+    if (idx >= 0) activeGameIndex.value = idx;
+  } catch (err) {
+    pinError.value = err.message || 'Could not update the pin. Please try again.';
+  } finally {
+    pinBusy.value = false;
+  }
+};
+
+const toggleAlerts = async () => {
+  if (alertsBusy.value) return;
+  alertsBusy.value = true;
+  alertsMsg.value = '';
+  const want = !alertsOn.value;
+  try {
+    const changed = await setScoreAlerts(want);
+    if (changed) alertsOn.value = want;
+    else alertsMsg.value = 'Allow notifications to turn on score alerts.';
+  } catch (err) {
+    alertsMsg.value = 'Could not update score alerts. Please try again.';
+  } finally {
+    alertsBusy.value = false;
+  }
 };
 
 onMounted(() => {
@@ -111,6 +171,29 @@ onUnmounted(() => {
         Final
       </button>
     </div>
+
+    <!-- Optional Score Alerts -->
+    <div class="flex items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white">
+      <div class="flex items-center gap-3 min-w-0">
+        <Bell class="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <div class="min-w-0">
+          <p class="text-xs font-bold">Score alerts</p>
+          <p class="text-[11px] text-slate-400">Get a notification when a game starts, the score changes, and when it ends.</p>
+        </div>
+      </div>
+      <button
+        @click="toggleAlerts"
+        :disabled="alertsBusy"
+        role="switch"
+        :aria-checked="alertsOn"
+        class="relative w-11 h-6 rounded-full transition flex-shrink-0 disabled:opacity-60"
+        :class="alertsOn ? 'bg-emerald-600' : 'bg-slate-700'"
+        title="Toggle score alerts"
+      >
+        <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform" :class="alertsOn ? 'translate-x-5' : ''"></span>
+      </button>
+    </div>
+    <p v-if="alertsMsg" class="text-xs text-amber-400 font-semibold text-center">{{ alertsMsg }}</p>
 
     <!-- Multi-Game Tab Selector with Arrow Indicators -->
     <div v-if="filteredGames.length > 1" class="relative flex items-center group">
@@ -235,15 +318,21 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Lock Screen Pin Action -->
-      <button 
-        @click="subscribeToLiveScore"
-        :disabled="!currentGame.isLive"
-        class="w-full py-2.5 px-4 rounded-lg font-bold text-xs tracking-wider uppercase transition flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        :class="isSubscribed ? 'bg-emerald-600 text-white' : 'bg-sparta-blue hover:bg-blue-700 text-white'"
-      >
-        {{ isSubscribed ? '✓ Live Updates Active on Lock Screen' : (currentGame.isLive ? 'Pin Live Score to Lock Screen' : (currentGame.isFuture ? 'Live Pin Available at Gametime' : 'Game Completed')) }}
-      </button>
+      <!-- Lock Screen Pin Action (available in the Spartan News app) -->
+      <template v-if="canPinToLockScreen()">
+        <button
+          @click="togglePin"
+          :disabled="pinBusy || (!isPinned && !currentGame.isLive)"
+          class="w-full py-2.5 px-4 rounded-lg font-bold text-xs tracking-wider uppercase transition flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          :class="isPinned ? 'bg-emerald-600 text-white' : 'bg-sparta-blue hover:bg-blue-700 text-white'"
+        >
+          {{ pinLabel }}
+        </button>
+        <p v-if="pinError" class="text-xs text-red-400 font-semibold text-center mt-2">{{ pinError }}</p>
+      </template>
+      <p v-else class="text-[11px] text-center text-slate-500">
+        Get live scores on your lock screen in the Spartan News app.
+      </p>
     </div>
 
     <!-- Empty State -->
