@@ -30,7 +30,7 @@ let hudlTimer = null;
 // Fetch Live Scores from Cloudflare Worker Hudl Endpoint
 const fetchHudlScore = async () => {
   try {
-    const res = await fetch("https://spartan-youtube-notifier.lsg1.workers.dev/check-scores");
+    const res = await fetch("https://noti.router.app.shsnews.live/check-scores");
     if (res.ok) {
       const data = await res.json();
       if (data && data.isLive) {
