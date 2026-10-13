@@ -4,6 +4,9 @@ import { Tv, Radio, Calendar, RefreshCw, Trophy, Activity } from 'lucide-vue-nex
 import { checkLiveStatus, fetchUpcomingStreams } from '../services/youtube.js';
 import { startGameLiveActivity } from '../services/notifications.js';
 
+// Official Channel ID for @spartannewslive
+const SPARTAN_CHANNEL_ID = 'UCngrGmmna1EEp5Q940Fy95g';
+
 const isLive = ref(false);
 const currentLiveVideoId = ref('');
 const liveStreamTitle = ref('');
@@ -54,21 +57,26 @@ const pinScoreToLockScreen = async () => {
 const checkLiveAndSchedule = async () => {
   loading.value = true;
   
-  // 1. Check YouTube Live Status
-  const liveInfo = await checkLiveStatus('SpartanNewsLive');
-  if (liveInfo && liveInfo.isLive) {
-    isLive.value = true;
-    currentLiveVideoId.value = liveInfo.videoId;
-    liveStreamTitle.value = liveInfo.title;
-  } else {
-    isLive.value = false;
-    currentLiveVideoId.value = '';
-    liveStreamTitle.value = '';
-  }
+  try {
+    // 1. Check YouTube Live Status using exact Channel ID
+    const liveInfo = await checkLiveStatus(SPARTAN_CHANNEL_ID);
+    if (liveInfo && liveInfo.isLive) {
+      isLive.value = true;
+      currentLiveVideoId.value = liveInfo.videoId;
+      liveStreamTitle.value = liveInfo.title || 'Spartan News Network - Live Stream';
+    } else {
+      isLive.value = false;
+      currentLiveVideoId.value = '';
+      liveStreamTitle.value = '';
+    }
 
-  // 2. Fetch Upcoming Scheduled Streams
-  const scheduled = await fetchUpcomingStreams('SpartanNewsLive');
-  upcomingStreams.value = scheduled;
+    // 2. Fetch Upcoming Scheduled Streams using exact Channel ID
+    const scheduled = await fetchUpcomingStreams(SPARTAN_CHANNEL_ID);
+    upcomingStreams.value = scheduled || [];
+  } catch (err) {
+    console.error("YouTube Live check failed:", err);
+    isLive.value = false;
+  }
 
   // 3. Fetch Live Hudl Game Scores
   await fetchHudlScore();
@@ -156,9 +164,10 @@ onUnmounted(() => {
 
       <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 aspect-video bg-black rounded-xl overflow-hidden relative border border-slate-800">
+          <!-- Active Stream Player -->
           <iframe 
-            v-if="isLive && currentLiveVideoId"
-            :src="`https://www.youtube.com/embed/${currentLiveVideoId}?autoplay=1`"
+            v-if="isLive"
+            :src="currentLiveVideoId ? `https://www.youtube.com/embed/${currentLiveVideoId}?autoplay=1` : `https://www.youtube.com/embed/live_stream?channel=${SPARTAN_CHANNEL_ID}&autoplay=1`"
             class="w-full h-full"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
