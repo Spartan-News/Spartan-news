@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://spartan-news.pages.dev/sitemap.xml
+Sitemap: https://shsnews.live/sitemap.xml
