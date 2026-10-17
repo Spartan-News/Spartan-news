@@ -1,4 +1,4 @@
-# 🗞️️ Spartan News (shsnews.live)
+# 🗞️️ Spartan News (https://shsnews.live)
 
 A modern, fast, and accessible web application for Sparta Senior High School news broadcasts, sports scoreboards, live stream notifications, and interactive student polls. Built with Vue 3, Vite, Tailwind CSS, Firebase, and Cloudflare Workers.
 
