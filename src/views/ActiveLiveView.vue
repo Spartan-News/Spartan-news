@@ -4,13 +4,15 @@ import { Tv, Radio, Calendar, RefreshCw, Trophy, Activity } from 'lucide-vue-nex
 import { checkLiveStatus, fetchUpcomingStreams } from '../services/youtube.js';
 import { startGameLiveActivity } from '../services/notifications.js';
 
-// Official Channel ID for @spartannewslive
-const SPARTAN_CHANNEL_ID = 'UCngrGmmna1EEp5Q940Fy95g';
+// Official channel ID for @SpartanNewsLive
+const SPARTAN_CHANNEL_ID = 'UCMbRanNiBOBeop8qZkBAwlA';
+const SPARTAN_CHANNEL_HANDLE = 'SpartanNewsLive';
 
 const isLive = ref(false);
 const currentLiveVideoId = ref('');
 const liveStreamTitle = ref('');
 const upcomingStreams = ref([]);
+const youtubeError = ref('');
 const loading = ref(true);
 
 // Hudl Live Score State
@@ -26,6 +28,7 @@ const hudlScore = ref({
 
 const isSubscribedToLiveActivity = ref(false);
 let hudlTimer = null;
+let youtubeTimer = null;
 
 // Fetch Live Scores from Cloudflare Worker Hudl Endpoint
 const fetchHudlScore = async () => {
@@ -56,11 +59,16 @@ const pinScoreToLockScreen = async () => {
 
 const checkLiveAndSchedule = async () => {
   loading.value = true;
-  
-  try {
-    // 1. Check YouTube Live Status using exact Channel ID
-    const liveInfo = await checkLiveStatus(SPARTAN_CHANNEL_ID);
-    if (liveInfo && liveInfo.isLive) {
+  youtubeError.value = '';
+
+  const [liveResult, scheduleResult] = await Promise.allSettled([
+    checkLiveStatus(SPARTAN_CHANNEL_HANDLE),
+    fetchUpcomingStreams(SPARTAN_CHANNEL_HANDLE)
+  ]);
+
+  if (liveResult.status === 'fulfilled') {
+    const liveInfo = liveResult.value;
+    if (liveInfo.isLive) {
       isLive.value = true;
       currentLiveVideoId.value = liveInfo.videoId;
       liveStreamTitle.value = liveInfo.title || 'Spartan News Network - Live Stream';
@@ -69,29 +77,34 @@ const checkLiveAndSchedule = async () => {
       currentLiveVideoId.value = '';
       liveStreamTitle.value = '';
     }
-
-    // 2. Fetch Upcoming Scheduled Streams using exact Channel ID
-    const scheduled = await fetchUpcomingStreams(SPARTAN_CHANNEL_ID);
-    upcomingStreams.value = scheduled || [];
-  } catch (err) {
-    console.error("YouTube Live check failed:", err);
-    isLive.value = false;
+  } else {
+    console.error('YouTube Live status check failed:', liveResult.reason);
   }
 
-  // 3. Fetch Live Hudl Game Scores
-  await fetchHudlScore();
+  if (scheduleResult.status === 'fulfilled') {
+    upcomingStreams.value = scheduleResult.value;
+  } else {
+    console.error('YouTube scheduled stream fetch failed:', scheduleResult.reason);
+  }
 
+  const errors = [liveResult, scheduleResult]
+    .filter(result => result.status === 'rejected')
+    .map(result => result.reason instanceof Error ? result.reason.message : 'Unable to load YouTube live data.');
+  youtubeError.value = errors.join(' ');
   loading.value = false;
 };
 
 onMounted(() => {
   checkLiveAndSchedule();
+  fetchHudlScore();
+  youtubeTimer = setInterval(checkLiveAndSchedule, 60000);
   // Poll for Hudl live game score updates every 30 seconds
   hudlTimer = setInterval(fetchHudlScore, 30000);
 });
 
 onUnmounted(() => {
   if (hudlTimer) clearInterval(hudlTimer);
+  if (youtubeTimer) clearInterval(youtubeTimer);
 });
 </script>
 
@@ -108,6 +121,10 @@ onUnmounted(() => {
         <RefreshCw class="w-4 h-4 text-slate-300" :class="{ 'animate-spin': loading }" />
       </button>
     </div>
+
+    <p v-if="youtubeError" role="alert" class="text-sm text-amber-300">
+      {{ youtubeError }}
+    </p>
 
     <!-- Real-time Hudl Live Score Banner -->
     <section v-if="hudlScore.isLive" class="bg-slate-900 border border-blue-600/40 rounded-2xl p-5 text-white shadow-2xl max-w-2xl mx-auto">

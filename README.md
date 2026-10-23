@@ -66,6 +66,8 @@ The system relies on a serverless Cloudflare Worker (noti.router.app.shsnews.liv
 | Route | Method | Description |
 | :--- | :--- | :--- |
 | /youtube-feed | GET | Proxies YouTube playlist items for @spartannewsdaily8847 & @SpartanNewsLive. |
+| /check-live | GET | Returns the current live video ID and title for @SpartanNewsLive. |
+| /upcoming-streams | GET | Returns scheduled upcoming streams for @SpartanNewsLive. |
 | /check-scores | GET | Handles sports schedules and scoreboard overrides. |
 | /youtube-webhook | GET / POST | PubSubHubbub subscription handler that fires OneSignal push alerts when live. |
 

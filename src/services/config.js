@@ -1,1 +1,1 @@
-export const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://spartan-youtube-notifier.lsg1.workers.dev';
+export const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://noti.router.app.shsnews.live';
