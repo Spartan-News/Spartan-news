@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Vote, User, Play } from 'lucide-vue-next';
+import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Play } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
 
@@ -47,13 +47,11 @@ onMounted(() => {
           <div class="flex items-center gap-3">
             <img 
               src="https://unavatar.io/youtube/spartannewsdaily8847" 
-              alt="Sparta Senior High School News Live Logo" 
+              alt="Sparta Senior High School News Logo"
               class="w-10 h-10 rounded-full border-2 border-white object-cover shadow"
             />
             <div>
-              <h1 class="text-xl font-extrabold tracking-wide text-white">
-                Sparta Senior High School News Live
-              </h1>
+              <h1 class="text-xl font-extrabold tracking-wide text-white">Spartan News</h1>
               <p class="text-xs text-blue-200 font-medium tracking-wider">
                 SPARTAN NEWS NETWORK • SPARTA, MI
               </p>
@@ -83,14 +81,6 @@ onMounted(() => {
               <Tv class="w-3.5 h-3.5" /> Daily News
             </router-link>
 
-            <router-link 
-              to="/polls" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
-              active-class="bg-white text-sparta-blue font-extrabold shadow"
-            >
-              <Vote class="w-3.5 h-3.5 text-purple-400" /> Polls
-            </router-link>
-            
             <router-link
               to="/highlights"
               class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
@@ -133,14 +123,6 @@ onMounted(() => {
               <Mail class="w-3.5 h-3.5 text-emerald-400" /> Subscribe
             </router-link>
 
-            <!-- Account Link -->
-            <router-link 
-              to="/account" 
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
-              active-class="bg-white text-sparta-blue font-extrabold shadow"
-            >
-              <User class="w-3.5 h-3.5 text-sky-400" /> Account
-            </router-link>
           </nav>
 
           <!-- Light / Dark Mode Toggle Button (Desktop) -->
@@ -156,7 +138,7 @@ onMounted(() => {
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main id="route-content" class="max-w-7xl mx-auto px-4 py-8">
       <router-view />
     </main>
 

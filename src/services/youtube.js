@@ -55,14 +55,11 @@ export async function checkLiveStatus(handle = 'SpartanNewsLive') {
   };
 }
 
-export async function fetchUpcomingStreams(handle = 'SpartanNewsLive') {
-  const data = await fetchWorkerJson(
-    `/upcoming-streams?handle=${encodeURIComponent(handle)}`,
-    'fetch upcoming YouTube streams'
-  );
+export async function fetchUpcomingStreams() {
+  const data = await fetchWorkerJson('/upcoming-streams', 'fetch the Spartan News calendar');
 
   if (!Array.isArray(data.items)) {
-    throw new Error(data.error || 'The YouTube worker did not return upcoming streams.');
+    throw new Error(data.error || 'The calendar worker did not return upcoming events.');
   }
 
   return data.items.map(stream => {

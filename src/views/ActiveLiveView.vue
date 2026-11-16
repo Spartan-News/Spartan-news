@@ -75,7 +75,7 @@ const checkLiveAndSchedule = async () => {
 
   const [liveResult, scheduleResult] = await Promise.allSettled([
     checkLiveStatus(SPARTAN_CHANNEL_HANDLE),
-    fetchUpcomingStreams(SPARTAN_CHANNEL_HANDLE)
+    fetchUpcomingStreams()
   ]);
 
   if (liveResult.status === 'fulfilled') {
@@ -96,7 +96,7 @@ const checkLiveAndSchedule = async () => {
   if (scheduleResult.status === 'fulfilled') {
     upcomingStreams.value = scheduleResult.value;
   } else {
-    console.error('YouTube scheduled stream fetch failed:', scheduleResult.reason);
+    console.error('Google Calendar schedule fetch failed:', scheduleResult.reason);
   }
 
   const errors = [liveResult, scheduleResult]
@@ -228,9 +228,11 @@ onUnmounted(() => {
 
           <!-- Dynamic Upcoming Broadcast Schedule -->
           <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-3">
-            <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
-              <Calendar class="w-4 h-4 text-sparta-gold" /> Upcoming Scheduled Streams
+          <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+              <Calendar class="w-4 h-4 text-sparta-gold" /> Upcoming Spartan News Events
             </h4>
+
+            <a href="https://calendar.google.com/calendar/u/0?cid=ZmNlMDNmMmFmNThlNmQzMDNiNjEwZGEzZGY2ZTM5MjQ1ZDBlN2U4YTRiYmJlMGNlNTY1NWQ0OGNmZDgwNzU4NEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener noreferrer" class="block text-[11px] font-semibold text-blue-400 hover:text-blue-300">Open full Google Calendar</a>
 
             <ul v-if="upcomingStreams.length > 0" class="text-xs space-y-2 text-slate-400">
               <li 
@@ -244,7 +246,7 @@ onUnmounted(() => {
             </ul>
 
             <div v-else-if="!loading" class="text-xs text-slate-500 py-1 font-medium">
-              No upcoming streams scheduled on YouTube.
+              No upcoming events are scheduled on the Google Calendar.
             </div>
           </div>
         </div>

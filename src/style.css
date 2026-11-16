@@ -18,3 +18,81 @@ body {
 .dark body {
   @apply bg-slate-950 text-slate-100;
 }
+
+/* Route views use dark utility colors in both themes; translate those surfaces in light mode. */
+:root:not(.dark) #route-content [class*="bg-slate-950"] {
+  background-color: #f8fafc !important;
+}
+
+:root:not(.dark) #route-content [class*="bg-slate-900"] {
+  background-color: #ffffff !important;
+}
+
+:root:not(.dark) #route-content [class*="bg-slate-800"] {
+  background-color: #f1f5f9 !important;
+}
+
+:root:not(.dark) #route-content [class*="bg-slate-700"] {
+  background-color: #e2e8f0 !important;
+}
+
+:root:not(.dark) #route-content [class~="text-white"]:not(button):not([role="button"]) {
+  color: #0f172a !important;
+}
+
+:root:not(.dark) #route-content [class*="text-slate-100"],
+:root:not(.dark) #route-content [class*="text-slate-200"] {
+  color: #334155 !important;
+}
+
+:root:not(.dark) #route-content [class*="text-slate-300"],
+:root:not(.dark) #route-content [class*="text-slate-400"],
+:root:not(.dark) #route-content [class*="text-slate-500"] {
+  color: #475569 !important;
+}
+
+:root:not(.dark) #route-content [class*="text-slate-600"],
+:root:not(.dark) #route-content [class*="text-slate-700"] {
+  color: #334155 !important;
+}
+
+:root:not(.dark) #route-content [class*="border-slate-700"],
+:root:not(.dark) #route-content [class*="border-slate-800"],
+:root:not(.dark) #route-content [class*="border-slate-600"] {
+  border-color: #cbd5e1 !important;
+}
+
+:root:not(.dark) #route-content [class*="divide-slate-800"] {
+  border-color: #cbd5e1 !important;
+}
+
+:root:not(.dark) #route-content [class~="text-sparta-gold"] {
+  color: #946c00 !important;
+}
+
+:root:not(.dark) #route-content [class*="text-blue-400"],
+:root:not(.dark) #route-content [class*="text-blue-300"] {
+  color: #1d4ed8 !important;
+}
+
+:root:not(.dark) #route-content [class*="text-sky-400"],
+:root:not(.dark) #route-content [class*="text-sky-300"] {
+  color: #0369a1 !important;
+}
+
+:root:not(.dark) #route-content [class*="text-amber-400"],
+:root:not(.dark) #route-content [class*="text-amber-300"] {
+  color: #92400e !important;
+}
+
+:root:not(.dark) #route-content [class*="text-red-400"] {
+  color: #b91c1c !important;
+}
+
+:root:not(.dark) #route-content [class*="text-emerald-400"] {
+  color: #047857 !important;
+}
+
+:root:not(.dark) #route-content button[class*="bg-slate-"] {
+  color: #1e293b !important;
+}

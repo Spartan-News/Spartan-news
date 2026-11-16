@@ -76,8 +76,7 @@
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Signed in as <span class="font-semibold text-slate-700 dark:text-slate-300">{{ user.email }}</span>
-            &middot; <router-link to="/admin/polls" class="text-[#003366] dark:text-blue-400 hover:underline">Manage polls</router-link>
-            <span v-if="isOwner"> &middot; <router-link to="/admin/users" class="text-purple-600 dark:text-purple-400 hover:underline">Manage users</router-link></span>
+            <span v-if="isOwner"><router-link to="/admin/users" class="text-purple-600 dark:text-purple-400 hover:underline">Manage authorized users</router-link></span>
           </p>
         </div>
         <div class="flex items-center gap-3">

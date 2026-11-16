@@ -4,11 +4,8 @@ import ActiveLiveView from '../views/ActiveLiveView.vue'
 import PastLivesView from '../views/PastLivesView.vue'
 import ScoreboardView from '../views/ScoreboardView.vue'
 import SubscribeView from '../views/SubscribeView.vue'
-import PollsView from '../views/PollsView.vue'
-import AdminPollsView from '../views/AdminPollsView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminScheduleView from '../views/AdminScheduleView.vue'
-import AccountView from '../views/AccountView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import ShortUrlView from '../views/ShortUrlView.vue'
 import HudlHighlightsView from '../views/HudlHighlightsView.vue'
@@ -40,11 +37,8 @@ const routes = [
       }
     }
   },
-  { path: '/polls', name: 'Polls', component: PollsView },
-  { path: '/admin/polls', name: 'AdminPolls', component: AdminPollsView },
   { path: '/admin/users', name: 'AdminUsers', component: AdminUsersView },
   { path: '/admin/schedule', name: 'AdminSchedule', component: AdminScheduleView },
-  { path: '/account', name: 'Account', component: AccountView },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView },
 ]
 
