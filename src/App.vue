@@ -46,7 +46,7 @@ onMounted(() => {
         <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div class="flex items-center gap-3">
             <img 
-              src="https://yt3.googleusercontent.com/ytc/AIdro_mPFpncvKq3JLkok-3fK49hGC1E8Atfx33UZufJYZX-AB8=s160-c-k-c0x00ffffff-no-rj" 
+              src="https://unavatar.io/youtube/spartannewsdaily8847" 
               alt="Sparta Senior High School News Live Logo" 
               class="w-10 h-10 rounded-full border-2 border-white object-cover shadow"
             />
