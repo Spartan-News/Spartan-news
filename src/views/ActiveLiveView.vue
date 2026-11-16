@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Tv, Radio, Calendar, RefreshCw, Trophy, Activity } from 'lucide-vue-next';
 import { checkLiveStatus, fetchUpcomingStreams } from '../services/youtube.js';
 import { startGameLiveActivity } from '../services/notifications.js';
@@ -13,6 +13,10 @@ const isLive = ref(false);
 const currentLiveVideoId = ref('');
 const liveStreamTitle = ref('');
 const upcomingStreams = ref([]);
+const showAllUpcoming = ref(false);
+const visibleUpcomingStreams = computed(() =>
+  showAllUpcoming.value ? upcomingStreams.value : upcomingStreams.value.slice(0, 4)
+);
 const youtubeError = ref('');
 const loading = ref(true);
 
@@ -242,9 +246,13 @@ onUnmounted(() => {
 
             <a href="https://calendar.google.com/calendar/u/0?cid=ZmNlMDNmMmFmNThlNmQzMDNiNjEwZGEzZGY2ZTM5MjQ1ZDBlN2U4YTRiYmJlMGNlNTY1NWQ0OGNmZDgwNzU4NEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener noreferrer" class="block text-[11px] font-semibold text-blue-400 hover:text-blue-300">Open full Google Calendar</a>
 
-            <ul v-if="upcomingStreams.length > 0" class="text-xs space-y-2 text-slate-400">
+            <ul
+              v-if="upcomingStreams.length > 0"
+              class="text-xs space-y-2 text-slate-400"
+              :class="showAllUpcoming ? 'max-h-56 overflow-y-auto pr-1' : ''"
+            >
               <li 
-                v-for="stream in upcomingStreams" 
+                v-for="stream in visibleUpcomingStreams"
                 :key="stream.id"
                 class="flex flex-col border-b border-slate-800/60 pb-1.5 gap-0.5"
               >
@@ -253,7 +261,16 @@ onUnmounted(() => {
               </li>
             </ul>
 
-            <div v-else-if="!loading" class="text-xs text-slate-500 py-1 font-medium">
+            <button
+              v-if="upcomingStreams.length > 4"
+              type="button"
+              class="text-[11px] font-semibold text-blue-400 hover:text-blue-300"
+              @click="showAllUpcoming = !showAllUpcoming"
+            >
+              {{ showAllUpcoming ? 'Show fewer events' : `Show all ${upcomingStreams.length} events` }}
+            </button>
+
+            <div v-if="upcomingStreams.length === 0 && !loading" class="text-xs text-slate-500 py-1 font-medium">
               No upcoming events are scheduled on the Google Calendar.
             </div>
           </div>
