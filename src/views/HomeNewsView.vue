@@ -103,10 +103,11 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { checkLiveStatus } from '../services/youtube.js'
 
 const router = useRouter()
+const route = useRoute()
 const videos = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
@@ -116,6 +117,10 @@ const API_BASE_URL = import.meta.env.VITE_WORKER_URL || 'https://noti.router.app
 
 onMounted(async () => {
   await Promise.allSettled([fetchVideos(), refreshLiveStatus()])
+  const notificationVideoId = String(route.query.v || '')
+  if (notificationVideoId) {
+    activeVideo.value = videos.value.find(video => video.id === notificationVideoId) || null
+  }
   livePoll = setInterval(refreshLiveStatus, 60000)
 })
 

@@ -69,7 +69,7 @@ export async function fetchUpcomingStreams() {
       typeof stream.title !== 'string' ||
       typeof stream.scheduledTime !== 'string'
     ) {
-      throw new Error('The YouTube worker returned an invalid upcoming stream.');
+      throw new Error('The calendar worker returned an invalid upcoming event.');
     }
 
     return stream;

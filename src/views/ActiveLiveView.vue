@@ -28,6 +28,7 @@ const hudlScore = ref({
 });
 
 const isSubscribedToLiveActivity = ref(false);
+const isNativeApp = Boolean(window?.Capacitor?.isNativePlatform?.());
 let hudlTimer = null;
 let youtubeTimer = null;
 
@@ -42,6 +43,7 @@ const fetchHudlScore = async () => {
         hudlScore.value = {
           ...hudlScore.value,
           ...liveGame,
+          id: liveGame.id || liveGame.scheduleEntryId || liveGame.gameId,
           isLive: true,
           homeTeam: liveGame.homeTeam?.name || liveGame.homeTeam || 'Spartans',
           awayTeam: liveGame.awayTeam?.name || liveGame.awayTeam || 'Opponent',
@@ -60,13 +62,19 @@ const fetchHudlScore = async () => {
 };
 
 const pinScoreToLockScreen = async () => {
-  isSubscribedToLiveActivity.value = true;
-  await startGameLiveActivity(
-    "sparta_game_score",
-    hudlScore.value.homeScore,
-    hudlScore.value.awayScore,
-    hudlScore.value.gameClock
-  );
+  if (!hudlScore.value.id) return;
+  try {
+    await startGameLiveActivity(
+      hudlScore.value.id,
+      hudlScore.value.homeScore,
+      hudlScore.value.awayScore,
+      hudlScore.value.gameClock,
+      { sport: hudlScore.value.sport, opponent: hudlScore.value.awayTeam }
+    );
+    isSubscribedToLiveActivity.value = true;
+  } catch (err) {
+    console.error('Could not start score Live Activity:', err);
+  }
 };
 
 const checkLiveAndSchedule = async () => {
@@ -166,7 +174,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <button 
+      <button v-if="isNativeApp && hudlScore.id"
         @click="pinScoreToLockScreen"
         class="w-full py-2.5 px-4 rounded-xl font-bold text-xs tracking-wider uppercase transition flex justify-center items-center gap-2"
         :class="isSubscribedToLiveActivity ? 'bg-emerald-600 text-white' : 'bg-sparta-blue hover:bg-blue-700 text-white'"
@@ -228,7 +236,7 @@ onUnmounted(() => {
 
           <!-- Dynamic Upcoming Broadcast Schedule -->
           <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-3">
-          <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+            <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-sparta-gold" /> Upcoming Spartan News Events
             </h4>
 

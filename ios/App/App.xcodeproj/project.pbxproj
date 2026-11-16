@@ -16,6 +16,9 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		E10000000000000000000001 /* SpartanLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000000000000000000004 /* SpartanLiveActivityWidget.swift */; };
+		E10000000000000000000002 /* OneSignalLiveActivities in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000010 /* OneSignalLiveActivities */; };
+		E10000000000000000000003 /* SpartanLiveActivity.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E10000000000000000000005 /* SpartanLiveActivity.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +33,8 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		E10000000000000000000004 /* SpartanLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpartanLiveActivityWidget.swift; sourceTree = "<group>"; };
+		E10000000000000000000005 /* SpartanLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = SpartanLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,6 +44,12 @@
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E10000000000000000000006 /* SpartanLiveActivity Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (E10000000000000000000002 /* OneSignalLiveActivities in Frameworks */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -57,6 +68,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				E10000000000000000000005 /* SpartanLiveActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,8 +85,15 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				E10000000000000000000007 /* LiveActivity */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000007 /* LiveActivity */ = {
+			isa = PBXGroup;
+			children = (E10000000000000000000004 /* SpartanLiveActivityWidget.swift */,);
+			path = LiveActivity;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -87,10 +106,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				E10000000000000000000014 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E10000000000000000000017 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -100,7 +121,27 @@
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
 		};
+		E10000000000000000000008 /* SpartanLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E10000000000000000000012 /* Build configuration list for PBXNativeTarget "SpartanLiveActivity" */;
+			buildPhases = (E10000000000000000000009 /* Sources */, E10000000000000000000006 /* SpartanLiveActivity Frameworks */, E10000000000000000000011 /* Resources */,);
+			buildRules = ();
+			dependencies = ();
+			name = SpartanLiveActivity;
+			packageProductDependencies = (E10000000000000000000010 /* OneSignalLiveActivities */,);
+			productName = SpartanLiveActivity;
+			productReference = E10000000000000000000005 /* SpartanLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		E10000000000000000000018 /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = 504EC2FC1FED79650016851F /* Project object */; proxyType = 1; remoteGlobalIDString = E10000000000000000000008; remoteInfo = SpartanLiveActivity; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		E10000000000000000000017 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = E10000000000000000000008 /* SpartanLiveActivity */; targetProxy = E10000000000000000000018 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		504EC2FC1FED79650016851F /* Project object */ = {
@@ -127,12 +168,14 @@
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
 				D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */,
+				E10000000000000000000013 /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */,
 			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				E10000000000000000000008 /* SpartanLiveActivity */,
 			);
 		};
 /* End PBXProject section */
@@ -163,6 +206,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E10000000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (E10000000000000000000001 /* SpartanLiveActivityWidget.swift in Sources */,);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E10000000000000000000011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E10000000000000000000014 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (E10000000000000000000003 /* SpartanLiveActivity.appex in Embed App Extensions */,);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
@@ -185,6 +249,8 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		E10000000000000000000015 /* SpartanLiveActivity Debug */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = App/LiveActivity/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.2; PRODUCT_BUNDLE_IDENTIFIER = com.spartanhigh.news.liveactivity; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		E10000000000000000000016 /* SpartanLiveActivity Release */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = App/LiveActivity/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.2; PRODUCT_BUNDLE_IDENTIFIER = com.spartanhigh.news.liveactivity; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
 		504EC3141FED79650016851F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
@@ -300,15 +366,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
+				MARKETING_VERSION = 1.0.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) "-D" "COCOAPODS" "-DDEBUG"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.spartanhigh.news;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -322,14 +388,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.spartanhigh.news;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -341,6 +407,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		E10000000000000000000012 /* Build configuration list for PBXNativeTarget "SpartanLiveActivity" */ = {isa = XCConfigurationList; buildConfigurations = (E10000000000000000000015 /* SpartanLiveActivity Debug */, E10000000000000000000016 /* SpartanLiveActivity Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 		504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -368,7 +435,12 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E10000000000000000000013 /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/OneSignal/OneSignal-XCFramework"; requirement = {kind = upToNextMajorVersion; minimumVersion = 5.0.0; }; };
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		E10000000000000000000010 /* OneSignalLiveActivities */ = {isa = XCSwiftPackageProductDependency; package = E10000000000000000000013 /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */; productName = OneSignalLiveActivities; };
 		4D22ABE82AF431CB00220026 /* CapApp-SPM */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */;

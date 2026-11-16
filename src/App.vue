@@ -20,8 +20,9 @@ onMounted(() => {
     isBrowser.value = false;
   }
 
-  // Load OneSignal Web SDK
-  if (!document.getElementById('onesignal-sdk')) {
+  // Native installs use the Capacitor SDK; load the web SDK only in browsers.
+  const webPushAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+  if (isBrowser.value && webPushAppId && !document.getElementById('onesignal-sdk')) {
     const script = document.createElement('script');
     script.id = 'onesignal-sdk';
     script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
@@ -31,7 +32,7 @@ onMounted(() => {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal) => {
       await OneSignal.init({
-        appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+        appId: webPushAppId,
       });
     });
   }

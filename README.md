@@ -2,6 +2,13 @@
 
 A modern, fast, and accessible web application for Sparta Senior High School news broadcasts, sports scoreboards, live stream notifications, and interactive student polls. Built with Vue 3, Vite, Tailwind CSS, Firebase, and Cloudflare Workers.
 
+## Updating the mobile apps
+
+- In Windows PowerShell, run `npm.cmd run cap:sync` after changing the Vue app or native plugin setup. This builds the site and syncs both iOS and Android projects.
+- For an Android release build on Windows, run `npm.cmd run build:android`. The release APK is created under `android/app/build/outputs/apk/release/`.
+- For iOS, open `ios/App/App.xcodeproj` in Xcode on a Mac, select the `App` scheme, then Archive and distribute the archive through App Store Connect.
+- Score Live Activities/Live Updates start when a user pins an active game from Scoreboard. iOS also requires OneSignal APNs Live Activity credentials configured for the app.
+
 ---
 
 ## 🚀 Key Features
