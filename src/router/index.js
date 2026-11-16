@@ -9,10 +9,13 @@ import AdminPollsView from '../views/AdminPollsView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminScheduleView from '../views/AdminScheduleView.vue'
 import AccountView from '../views/AccountView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
+import ShortUrlView from '../views/ShortUrlView.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: HomeNewsView },
   { path: '/live', name: 'ActiveLive', component: ActiveLiveView },
+  { path: '/shorturl', name: 'ShortUrl', component: ShortUrlView },
   { path: '/pastlives', name: 'PastLives', component: PastLivesView },
   { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
   { 
@@ -40,6 +43,7 @@ const routes = [
   { path: '/admin/users', name: 'AdminUsers', component: AdminUsersView },
   { path: '/admin/schedule', name: 'AdminSchedule', component: AdminScheduleView },
   { path: '/account', name: 'Account', component: AccountView },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView },
 ]
 
 const router = createRouter({

@@ -5,10 +5,10 @@
         <h1 class="text-3xl font-bold tracking-tight text-white">Spartan News Daily</h1>
         <p class="text-slate-400 mt-1">Latest daily announcements, broadcasts, and sports highlights.</p>
       </div>
-      <div v-if="isLiveNow" class="flex items-center space-x-2 bg-red-600/20 border border-red-500 text-red-400 px-3 py-1.5 rounded-full animate-pulse">
+      <router-link v-if="isLiveNow" to="/live" class="flex items-center space-x-2 bg-red-600/20 border border-red-500 text-red-400 px-3 py-1.5 rounded-full animate-pulse" aria-label="Spartan News Live is on air. Watch now.">
         <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
         <span class="text-sm font-semibold uppercase tracking-wider">Live Now</span>
-      </div>
+      </router-link>
     </header>
 
     <!-- Error State -->
@@ -102,8 +102,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { checkLiveStatus } from '../services/youtube.js'
 
 const router = useRouter()
 const videos = ref([])
@@ -115,8 +116,23 @@ const activeVideo = ref(null)
 const API_BASE_URL = import.meta.env.VITE_WORKER_URL || 'https://noti.router.app.shsnews.live'
 
 onMounted(async () => {
-  await fetchVideos()
+  await Promise.allSettled([fetchVideos(), refreshLiveStatus()])
+  livePoll = setInterval(refreshLiveStatus, 60000)
 })
+
+onUnmounted(() => {
+  if (livePoll) clearInterval(livePoll)
+})
+
+let livePoll = null
+
+async function refreshLiveStatus() {
+  try {
+    isLiveNow.value = (await checkLiveStatus('SpartanNewsLive')).isLive
+  } catch (err) {
+    console.error('Unable to check Spartan News Live status:', err)
+  }
+}
 
 async function fetchVideos() {
   isLoading.value = true

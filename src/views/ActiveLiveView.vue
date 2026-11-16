@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { Tv, Radio, Calendar, RefreshCw, Trophy, Activity } from 'lucide-vue-next';
 import { checkLiveStatus, fetchUpcomingStreams } from '../services/youtube.js';
 import { startGameLiveActivity } from '../services/notifications.js';
+import { WORKER_URL } from '../services/config.js';
 
 // Official channel ID for @SpartanNewsLive
 const SPARTAN_CHANNEL_ID = 'UCMbRanNiBOBeop8qZkBAwlA';
@@ -33,11 +34,22 @@ let youtubeTimer = null;
 // Fetch Live Scores from Cloudflare Worker Hudl Endpoint
 const fetchHudlScore = async () => {
   try {
-    const res = await fetch("https://noti.router.app.shsnews.live/check-scores");
+    const res = await fetch(`${WORKER_URL}/check-scores`);
     if (res.ok) {
       const data = await res.json();
-      if (data && data.isLive) {
-        hudlScore.value = data;
+      const liveGame = data?.games?.find(game => game.isLive || ['LIVE', 'IN_PROGRESS', 'IN PROGRESS'].includes(String(game.status || '').toUpperCase()));
+      if (liveGame) {
+        hudlScore.value = {
+          ...hudlScore.value,
+          ...liveGame,
+          isLive: true,
+          homeTeam: liveGame.homeTeam?.name || liveGame.homeTeam || 'Spartans',
+          awayTeam: liveGame.awayTeam?.name || liveGame.awayTeam || 'Opponent',
+          homeScore: liveGame.homeTeam?.score ?? liveGame.homeScore ?? 0,
+          awayScore: liveGame.awayTeam?.score ?? liveGame.awayScore ?? 0,
+        };
+      } else if (data?.isLive) {
+        hudlScore.value = { ...hudlScore.value, ...data };
       } else {
         hudlScore.value.isLive = false;
       }

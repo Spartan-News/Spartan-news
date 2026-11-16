@@ -10,6 +10,7 @@ import {
   getScoreAlertsEnabled,
   setScoreAlerts,
 } from '../services/notifications.js';
+import { WORKER_URL } from '../services/config.js';
 
 const games = ref([]);
 const activeGameIndex = ref(0);
@@ -30,11 +31,27 @@ let pollInterval = null;
 
 const fetchHudlScores = async () => {
   try {
-    const res = await fetch("https://noti.router.app.shsnews.live/check-scores");
+    const res = await fetch(`${WORKER_URL}/check-scores`);
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.games)) {
-        games.value = data.games;
+        games.value = data.games.map(game => {
+          const status = String(game.status || '').toUpperCase();
+          const homeTeam = typeof game.homeTeam === 'object' && game.homeTeam
+            ? game.homeTeam
+            : { name: game.homeTeam || game.homeTeamName || 'Spartans', score: game.homeScore ?? 0, logo: game.homeLogo || '' };
+          const awayTeam = typeof game.awayTeam === 'object' && game.awayTeam
+            ? game.awayTeam
+            : { name: game.awayTeam || game.awayTeamName || 'Opponent', score: game.awayScore ?? 0, logo: game.awayLogo || '' };
+          return {
+            ...game,
+            homeTeam,
+            awayTeam,
+            gameClock: game.gameClock || game.clock || game.scheduledTime || '',
+            isLive: Boolean(game.isLive) || ['LIVE', 'IN_PROGRESS', 'IN PROGRESS'].includes(status),
+            isFuture: Boolean(game.isFuture) || ['SCHEDULED', 'UPCOMING'].includes(status),
+          };
+        });
         prunePins();
         await nextTick();
         checkScrollOverflow();
