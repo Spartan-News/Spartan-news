@@ -10,7 +10,8 @@
     "cap:sync": "npm run build && npx cap sync",
     "cap:sync:android": "npm run build && npx cap sync android",
     "cap:sync:ios": "npm run build && npx cap sync ios",
-    "build:android": "npm run cap:sync:android && cd android && gradlew.bat assembleRelease"
+    "build:android:debug": "npm run cap:sync:android && cd android && .\\gradlew.bat assembleDebug",
+    "build:android": "npm run cap:sync:android && cd android && .\\gradlew.bat assembleRelease"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",
