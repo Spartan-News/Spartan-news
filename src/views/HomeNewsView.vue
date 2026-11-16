@@ -3,7 +3,7 @@
     <header class="mb-8 flex justify-between items-center">
       <div>
         <h1 class="text-3xl font-bold tracking-tight text-white">Spartan News Daily</h1>
-        <p class="text-slate-400 mt-1">Latest daily announcements, broadcasts, and sports highlights.</p>
+        <p class="text-slate-400 mt-1">Latest daily announcements and school broadcasts.</p>
       </div>
       <router-link v-if="isLiveNow" to="/live" class="flex items-center space-x-2 bg-red-600/20 border border-red-500 text-red-400 px-3 py-1.5 rounded-full animate-pulse" aria-label="Spartan News Live is on air. Watch now.">
         <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
@@ -112,7 +112,6 @@ const isLoading = ref(true)
 const errorMessage = ref('')
 const isLiveNow = ref(false)
 const activeVideo = ref(null)
-
 const API_BASE_URL = import.meta.env.VITE_WORKER_URL || 'https://noti.router.app.shsnews.live'
 
 onMounted(async () => {

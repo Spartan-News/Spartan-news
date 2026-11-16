@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Vote, User } from 'lucide-vue-next';
+import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Vote, User, Play } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
 
@@ -91,7 +91,15 @@ onMounted(() => {
               <Vote class="w-3.5 h-3.5 text-purple-400" /> Polls
             </router-link>
             
-            <router-link 
+            <router-link
+              to="/highlights"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
+              active-class="bg-white text-sparta-blue font-extrabold shadow"
+            >
+              <Play class="w-3.5 h-3.5 text-amber-300" /> Highlights
+            </router-link>
+
+            <router-link
               to="/scoreboard" 
               class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
               active-class="bg-white text-sparta-blue font-extrabold shadow"

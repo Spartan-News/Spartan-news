@@ -11,6 +11,7 @@ import AdminScheduleView from '../views/AdminScheduleView.vue'
 import AccountView from '../views/AccountView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import ShortUrlView from '../views/ShortUrlView.vue'
+import HudlHighlightsView from '../views/HudlHighlightsView.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: HomeNewsView },
@@ -18,6 +19,7 @@ const routes = [
   { path: '/shorturl', name: 'ShortUrl', component: ShortUrlView },
   { path: '/pastlives', name: 'PastLives', component: PastLivesView },
   { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
+  { path: '/highlights', name: 'Highlights', component: HudlHighlightsView },
   { 
     path: '/subscribe', 
     name: 'Subscribe', 
