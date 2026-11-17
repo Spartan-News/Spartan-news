@@ -1,0 +1,17 @@
+<template>
+  <article class="mx-auto max-w-4xl space-y-7 rounded-2xl border border-slate-200 bg-white p-6 text-slate-800 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 sm:p-10">
+    <header class="border-b border-slate-200 pb-5 dark:border-slate-700">
+      <p class="text-xs font-black uppercase tracking-[0.18em] text-blue-700 dark:text-sparta-gold">Spartan News</p>
+      <h1 class="mt-2 text-3xl font-black text-slate-950 dark:text-white">Terms of Service</h1>
+      <p class="mt-2 text-sm">Effective November 16, 2026</p>
+    </header>
+
+    <section><h2 class="text-xl font-bold text-slate-950 dark:text-white">Using this site</h2><p class="mt-2">These terms apply when you visit or use the Spartan News website and its public features. By using the site, you agree to use it lawfully and respectfully. If you do not agree, please stop using the site.</p></section>
+    <section><h2 class="text-xl font-bold text-slate-950 dark:text-white">News, schedules, scores, and streams</h2><p class="mt-2">Content is provided for general information and school-community use. Live status, event schedules, sports scores, highlights, and video availability may be delayed, incomplete, changed by the original publisher, or temporarily unavailable. Confirm time-sensitive details with the school, event organizer, or original source.</p></section>
+    <section><h2 class="text-xl font-bold text-slate-950 dark:text-white">Acceptable use</h2><p class="mt-2">Do not interfere with the site, attempt unauthorized access, misuse forms or services, distribute malware, or use the site to violate another person's rights. Do not submit private information about another person unless you have permission and a valid reason to do so.</p></section>
+    <section><h2 class="text-xl font-bold text-slate-950 dark:text-white">Content and third-party services</h2><p class="mt-2">The site may link to or embed services such as YouTube, Hudl, Google Calendar, SendGrid, and OneSignal. Those services are operated by others and have their own terms, privacy notices, and availability. Their content and services are not controlled by this site.</p><p class="mt-2">Unless otherwise indicated, Spartan News site design and original materials are reserved to their respective owners. Names, logos, videos, and other third-party materials remain with their owners. Do not reuse material without permission where permission is required.</p></section>
+    <section><h2 class="text-xl font-bold text-slate-950 dark:text-white">Availability and liability</h2><p class="mt-2">The site is provided as available. We do not promise uninterrupted service, error-free information, or that every third-party feature will remain available. To the extent permitted by applicable law, Spartan News disclaims implied warranties and is not responsible for indirect loss arising from use of the site. Nothing in these terms limits rights or remedies that cannot lawfully be limited.</p></section>
+    <section><h2 class="text-xl font-bold text-slate-950 dark:text-white">Changes and contact</h2><p class="mt-2">These terms may be updated as the site changes. The effective date above will be revised when a material update is published. For questions about these terms, use the official Spartan News or school communication channels.</p></section>
+    <p class="border-t border-slate-200 pt-5 text-sm dark:border-slate-700">See also the <router-link to="/cookies" class="font-bold text-blue-700 underline dark:text-blue-300">Cookie Policy</router-link>.</p>
+  </article>
+</template>

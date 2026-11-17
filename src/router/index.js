@@ -9,6 +9,8 @@ import AdminScheduleView from '../views/AdminScheduleView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import ShortUrlView from '../views/ShortUrlView.vue'
 import HudlHighlightsView from '../views/HudlHighlightsView.vue'
+import TermsView from '../views/TermsView.vue'
+import CookiePolicyView from '../views/CookiePolicyView.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: HomeNewsView },
@@ -17,6 +19,8 @@ const routes = [
   { path: '/pastlives', name: 'PastLives', component: PastLivesView },
   { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
   { path: '/highlights', name: 'Highlights', component: HudlHighlightsView },
+  { path: '/terms', name: 'Terms', component: TermsView },
+  { path: '/cookie-policy', alias: '/cookies', name: 'CookiePolicy', component: CookiePolicyView },
   { 
     path: '/subscribe', 
     name: 'Subscribe', 

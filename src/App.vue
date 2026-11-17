@@ -3,9 +3,14 @@ import { ref, onMounted } from 'vue';
 import { Radio, Tv, History, Sun, Moon, Trophy, Mail, Play } from 'lucide-vue-next';
 import { useTheme } from './services/theme.js';
 import { initNotifications } from './services/notifications.js';
+import CookieConsent from './components/CookieConsent.vue';
 
 const { isDark, initTheme, toggleTheme } = useTheme();
 const isBrowser = ref(true);
+
+function openCookieSettings() {
+  window.dispatchEvent(new Event('spartan-cookie-settings'));
+}
 
 onMounted(() => {
   initTheme();
@@ -152,9 +157,16 @@ onMounted(() => {
           <span>Designed & Coded by Peyton Gordon</span>
           <span>•</span>
           <a href="/sitemap.xml" target="_blank" class="hover:underline text-blue-600 dark:text-blue-400">Sitemap</a>
+          <span>•</span>
+          <router-link to="/terms" class="hover:underline text-blue-600 dark:text-blue-400">Terms</router-link>
+          <span>•</span>
+          <router-link to="/cookies" class="hover:underline text-blue-600 dark:text-blue-400">Cookie Policy</router-link>
+          <span>•</span>
+          <button type="button" @click="openCookieSettings" class="hover:underline text-blue-600 dark:text-blue-400">Cookie settings</button>
         </div>
       </div>
     </footer>
+    <CookieConsent v-if="isBrowser" />
   </div>
 </template>
 
