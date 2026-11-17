@@ -208,7 +208,8 @@ onUnmounted(() => {
           <!-- Active Stream Player -->
           <iframe 
             v-if="isLive"
-            :src="currentLiveVideoId ? `https://www.youtube.com/embed/${currentLiveVideoId}?autoplay=1` : `https://www.youtube.com/embed/live_stream?channel=${SPARTAN_CHANNEL_ID}&autoplay=1`"
+            :src="currentLiveVideoId ? `https://www.youtube.com/embed/${currentLiveVideoId}?autoplay=1&cc_load_policy=1` : `https://www.youtube.com/embed/live_stream?channel=${SPARTAN_CHANNEL_ID}&autoplay=1&cc_load_policy=1`"
+            :title="liveStreamTitle || 'Spartan News live broadcast'"
             class="w-full h-full"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

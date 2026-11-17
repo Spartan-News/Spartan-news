@@ -46,6 +46,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <a href="#route-content" class="skip-to-content">Skip to main content</a>
     <!-- Royal Blue Navigation Header -->
     <header class="border-b border-blue-900 bg-sparta-blue dark:bg-sparta-darkblue text-white backdrop-blur sticky top-0 z-50 shadow-md">
       <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -65,8 +66,9 @@ onMounted(() => {
           </div>
 
           <!-- Light / Dark Mode Toggle Button (Mobile) -->
-          <button 
+          <button
             @click="toggleTheme" 
+            :aria-label="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
             class="sm:hidden p-2 bg-black/30 dark:bg-black/60 border border-white/20 text-blue-100 hover:text-white rounded-lg transition"
             :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
@@ -77,7 +79,7 @@ onMounted(() => {
 
         <div class="flex items-center gap-3 w-full sm:w-auto">
           <!-- Scrollable Navigation Router Links -->
-          <nav class="flex items-center gap-1.5 bg-black/30 dark:bg-black/60 border border-white/20 p-1.5 rounded-lg overflow-x-auto whitespace-nowrap scrollbar-none w-full sm:w-auto">
+          <nav aria-label="Primary navigation" class="flex items-center gap-1.5 bg-black/30 dark:bg-black/60 border border-white/20 p-1.5 rounded-lg overflow-x-auto whitespace-nowrap scrollbar-none w-full sm:w-auto">
             <router-link 
               to="/" 
               class="px-3.5 py-1.5 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-blue-100 hover:text-white shrink-0"
@@ -132,8 +134,9 @@ onMounted(() => {
           </nav>
 
           <!-- Light / Dark Mode Toggle Button (Desktop) -->
-          <button 
+          <button
             @click="toggleTheme" 
+            :aria-label="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
             class="hidden sm:block p-2 bg-black/30 dark:bg-black/60 border border-white/20 text-blue-100 hover:text-white rounded-lg transition shrink-0"
             :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
@@ -144,7 +147,7 @@ onMounted(() => {
       </div>
     </header>
 
-    <main id="route-content" class="max-w-7xl mx-auto px-4 py-8">
+    <main id="route-content" tabindex="-1" class="max-w-7xl mx-auto px-4 py-8">
       <router-view />
     </main>
 

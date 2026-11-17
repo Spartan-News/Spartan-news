@@ -11,10 +11,14 @@ import {
   setScoreAlerts,
 } from '../services/notifications.js';
 import { WORKER_URL } from '../services/config.js';
+import MediaSearchFilters from './MediaSearchFilters.vue';
 
 const games = ref([]);
 const activeGameIndex = ref(0);
 const filterCategory = ref('all');
+const sports = computed(() => [...new Set(games.value.map(game => game.sport).filter(Boolean))].sort());
+const draftFilters = ref({ query: '', sport: 'all', fromDate: '', toDate: '' });
+const appliedFilters = ref({ ...draftFilters.value });
 const pinnedIds = ref(getPinnedIds());
 const pinBusy = ref(false);
 const pinError = ref('');
@@ -80,6 +84,19 @@ const filteredGames = computed(() => {
   if (filterCategory.value === 'live') list = list.filter(g => g.isLive);
   else if (filterCategory.value === 'upcoming') list = list.filter(g => g.isFuture);
   else if (filterCategory.value === 'final') list = list.filter(g => g.status === 'FINAL');
+  const query = appliedFilters.value.query.trim().toLocaleLowerCase();
+  if (appliedFilters.value.sport !== 'all') list = list.filter(g => g.sport === appliedFilters.value.sport);
+  if (query) {
+    list = list.filter(g => [g.sport, g.level, g.gender, g.opponent, g.homeTeam?.name, g.awayTeam?.name]
+      .filter(Boolean).join(' ').toLocaleLowerCase().includes(query));
+  }
+  if (appliedFilters.value.fromDate || appliedFilters.value.toDate) {
+    list = list.filter(g => {
+      const date = gameDateKey(g.date || g.startTimeMs);
+      return date && (!appliedFilters.value.fromDate || date >= appliedFilters.value.fromDate) &&
+        (!appliedFilters.value.toDate || date <= appliedFilters.value.toDate);
+    });
+  }
   // Pinned games float to the top (sort is stable, so the rest keep their order).
   return [...list].sort((a, b) => Number(pinnedIds.value.includes(b.id)) - Number(pinnedIds.value.includes(a.id)));
 });
@@ -87,6 +104,27 @@ const filteredGames = computed(() => {
 const currentGame = computed(() => {
   return filteredGames.value[activeGameIndex.value] || null;
 });
+
+function gameDateKey(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Detroit', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date).reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function applyFilters() {
+  appliedFilters.value = { ...draftFilters.value };
+  activeGameIndex.value = 0;
+  nextTick(checkScrollOverflow);
+}
+
+function clearFilters() {
+  draftFilters.value = { query: '', sport: 'all', fromDate: '', toDate: '' };
+  applyFilters();
+}
 
 const isPinned = computed(() => !!currentGame.value && pinnedIds.value.includes(currentGame.value.id));
 
@@ -157,32 +195,54 @@ onUnmounted(() => {
 
 <template>
   <div class="space-y-4 max-w-xl mx-auto my-6">
+    <MediaSearchFilters
+      id-prefix="scoreboard"
+      search-label="Search teams and games"
+      search-hint="Search team names, opponents, sport, or level. Dates use Sparta local time."
+      :sports="sports"
+      v-model:query="draftFilters.query"
+      v-model:sport="draftFilters.sport"
+      v-model:from-date="draftFilters.fromDate"
+      v-model:to-date="draftFilters.toDate"
+      @apply="applyFilters"
+      @clear="clearFilters"
+    />
+    <p role="status" aria-live="polite" class="text-center text-sm text-slate-300">Showing {{ filteredGames.length }} of {{ games.length }} games.</p>
+
     <!-- Category Filter Tabs -->
-    <div class="flex justify-center gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-xl text-xs font-bold">
+    <div role="group" aria-label="Filter games by status" class="flex flex-wrap justify-center gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-xl text-xs font-bold">
       <button 
+        type="button"
         @click="filterCategory = 'all'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
-        class="px-3 py-1.5 rounded-lg transition"
+        class="min-h-11 px-3 py-1.5 rounded-lg transition"
+        :aria-pressed="filterCategory === 'all'"
         :class="filterCategory === 'all' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
       >
         All Games
       </button>
       <button 
+        type="button"
         @click="filterCategory = 'live'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
-        class="px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+        class="min-h-11 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+        :aria-pressed="filterCategory === 'live'"
         :class="filterCategory === 'live' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'"
       >
-        <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span> Live
+        <span aria-hidden="true" class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span> Live
       </button>
       <button 
+        type="button"
         @click="filterCategory = 'upcoming'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
-        class="px-3 py-1.5 rounded-lg transition"
+        class="min-h-11 px-3 py-1.5 rounded-lg transition"
+        :aria-pressed="filterCategory === 'upcoming'"
         :class="filterCategory === 'upcoming' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
       >
         Upcoming
       </button>
       <button 
+        type="button"
         @click="filterCategory = 'final'; activeGameIndex = 0; nextTick(checkScrollOverflow)" 
-        class="px-3 py-1.5 rounded-lg transition"
+        class="min-h-11 px-3 py-1.5 rounded-lg transition"
+        :aria-pressed="filterCategory === 'final'"
         :class="filterCategory === 'final' ? 'bg-sparta-blue text-white shadow' : 'text-slate-400 hover:text-white'"
       >
         Final
@@ -194,18 +254,19 @@ onUnmounted(() => {
       <div class="flex items-center gap-3 min-w-0">
         <Bell class="w-4 h-4 text-amber-400 flex-shrink-0" />
         <div class="min-w-0">
-          <p class="text-xs font-bold">Score alerts</p>
-          <p class="text-[11px] text-slate-400">Get a notification when a game starts, the score changes, and when it ends.</p>
+          <p id="score-alerts-label" class="text-xs font-bold">Score alerts</p>
+          <p id="score-alerts-description" class="text-[11px] text-slate-400">Get a notification when a game starts, the score changes, and when it ends.</p>
         </div>
       </div>
       <button
         @click="toggleAlerts"
         :disabled="alertsBusy"
         role="switch"
+        aria-labelledby="score-alerts-label"
+        aria-describedby="score-alerts-description"
         :aria-checked="alertsOn"
         class="relative w-11 h-6 rounded-full transition flex-shrink-0 disabled:opacity-60"
         :class="alertsOn ? 'bg-emerald-600' : 'bg-slate-700'"
-        title="Toggle score alerts"
       >
         <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform" :class="alertsOn ? 'translate-x-5' : ''"></span>
       </button>
@@ -216,8 +277,10 @@ onUnmounted(() => {
     <div v-if="filteredGames.length > 1" class="relative flex items-center group">
       <!-- Left Arrow Button -->
       <button 
+        type="button"
         v-if="canScrollLeft"
         @click="scrollTabs('left')"
+        aria-label="Scroll game list left"
         class="absolute left-0 z-10 p-1.5 bg-slate-900/90 border border-slate-700 text-white rounded-full shadow-lg backdrop-blur hover:bg-sparta-blue transition -ml-2"
         title="Scroll Left"
       >
@@ -231,23 +294,28 @@ onUnmounted(() => {
         class="flex gap-2 overflow-x-auto py-1 px-1 scrollbar-none w-full scroll-smooth"
       >
         <button
+          type="button"
           v-for="(game, idx) in filteredGames"
           :key="game.id"
           @click="activeGameIndex = idx"
           class="px-3.5 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-2 border flex-shrink-0"
+          :aria-pressed="activeGameIndex === idx"
           :class="activeGameIndex === idx 
             ? 'bg-sparta-blue border-blue-500 text-white shadow-lg' 
             : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white'"
         >
-          <span class="w-2 h-2 rounded-full" :class="game.isLive ? 'bg-red-500 animate-pulse' : (game.isFuture ? 'bg-blue-400' : 'bg-slate-600')"></span>
-          {{ game.sport }} ({{ game.level }})
+          <span aria-hidden="true" class="w-2 h-2 rounded-full" :class="game.isLive ? 'bg-red-500 animate-pulse' : (game.isFuture ? 'bg-blue-400' : 'bg-slate-600')"></span>
+          {{ game.sport }} vs {{ game.opponent }} ({{ game.level }})
+          <span class="sr-only">{{ game.isLive ? 'Live' : (game.isFuture ? 'Upcoming' : 'Final') }}</span>
         </button>
       </div>
 
       <!-- Right Arrow Button -->
       <button 
+        type="button"
         v-if="canScrollRight"
         @click="scrollTabs('right')"
+        aria-label="Scroll game list right"
         class="absolute right-0 z-10 p-1.5 bg-slate-900/90 border border-slate-700 text-white rounded-full shadow-lg backdrop-blur hover:bg-sparta-blue transition -mr-2"
         title="Scroll Right"
       >

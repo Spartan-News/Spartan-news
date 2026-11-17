@@ -96,3 +96,37 @@ body {
 :root:not(.dark) #route-content button[class*="bg-slate-"] {
   color: #1e293b !important;
 }
+
+.skip-to-content {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-160%);
+  border-radius: 0.5rem;
+  background: white;
+  padding: 0.75rem 1rem;
+  color: #001e62;
+  font-weight: 700;
+}
+
+.skip-to-content:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid #ffc72c;
+  outline-offset: 3px;
+}
+
+:where(a, button, input, select, textarea, iframe):focus-visible {
+  outline: 3px solid #ffc72c;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #001e62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
