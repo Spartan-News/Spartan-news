@@ -97,6 +97,124 @@ body {
   color: #1e293b !important;
 }
 
+/* Seasonal details stay in the shared shell so every page gets the same treatment. */
+.holiday-header {
+  isolation: isolate;
+}
+
+.holiday-lights {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  height: 12px;
+  pointer-events: none;
+}
+
+.holiday-lights::before {
+  content: "";
+  position: absolute;
+  left: -1%;
+  right: -1%;
+  top: -9px;
+  height: 22px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.7);
+  border-radius: 0 0 50% 50%;
+}
+
+.holiday-light {
+  position: relative;
+  width: 8px;
+  height: 11px;
+  border-radius: 45% 45% 50% 50%;
+  background: var(--bulb-color, #fbbf24);
+  box-shadow: 0 0 7px 2px color-mix(in srgb, var(--bulb-color, #fbbf24) 72%, transparent);
+  animation: christmas-twinkle 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--light-index) * -0.17s);
+}
+
+.holiday-light:nth-child(4n + 1) { --bulb-color: #fb7185; }
+.holiday-light:nth-child(4n + 2) { --bulb-color: #facc15; }
+.holiday-light:nth-child(4n + 3) { --bulb-color: #4ade80; }
+.holiday-light:nth-child(4n) { --bulb-color: #7dd3fc; }
+
+.holiday-light::before {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #334155;
+  top: -3px;
+  left: 2px;
+  border-radius: 2px 2px 0 0;
+}
+
+.seasonal-main {
+  position: relative;
+}
+
+.seasonal-main::before,
+.seasonal-main::after {
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.34;
+  color: #16a34a;
+  font-size: 1.5rem;
+  animation: seasonal-drift 7s ease-in-out infinite;
+}
+
+.seasonal-main::before {
+  content: "❄";
+  top: 25vh;
+  left: max(12px, calc((100vw - 1440px) / 2));
+  color: #38bdf8;
+}
+
+.seasonal-main::after {
+  content: "✦";
+  top: 62vh;
+  right: max(14px, calc((100vw - 1440px) / 2));
+  color: #eab308;
+  animation-delay: -3.5s;
+}
+
+#route-content > * {
+  animation: page-settle 420ms cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+#route-content a,
+#route-content button {
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+#route-content a:hover,
+#route-content button:hover {
+  filter: brightness(1.04);
+}
+
+#route-content button:hover {
+  transform: translateY(-1px);
+}
+
+@keyframes christmas-twinkle {
+  0%, 100% { opacity: 0.72; transform: translateY(0) scale(0.9); }
+  50% { opacity: 1; transform: translateY(1px) scale(1.08); }
+}
+
+@keyframes seasonal-drift {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(12px) rotate(8deg); }
+}
+
+@keyframes page-settle {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .skip-to-content {
   position: fixed;
   z-index: 100;
@@ -128,5 +246,12 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .holiday-light,
+  .seasonal-main::before,
+  .seasonal-main::after,
+  #route-content > * {
+    animation: none !important;
   }
 }
